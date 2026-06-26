@@ -1,0 +1,15 @@
+/* Reemplazo de la URL correcta para que cargue los grosores de letra */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+/* scss-lint:disable UnknownAtRule */
+/* css@at-rule-ignored */
+@theme {
+  --font-sans: "Montserrat", sans-serif;
+
+}
+
+:root {
+  --primary: #0260eb;
+  --secondary: #02b6be;
+}
