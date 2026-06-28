@@ -10,7 +10,9 @@ import {
   FaCheckCircle,
 } from "react-icons/fa";
 
-export default function SelectRole() {
+
+
+export default function SelectRole({ onClientClick }: { onClientClick: () => void }) {
   return (
     <div className="min-h-screen bg-white flex flex-col items-center px-6 py-10">
 
@@ -57,6 +59,7 @@ export default function SelectRole() {
           text="Cliente"
           icon={<FaUser />}
           color="bg-[var(--primary)]"
+          onClick={onClientClick}
         />
 
         <RoleButton
