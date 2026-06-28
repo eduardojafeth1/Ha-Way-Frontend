@@ -1,12 +1,15 @@
-import logo from "../../../assets/images/logo.png";
-import RegisterForm from "../components/RegisterForm";
+import { useNavigate } from "react-router-dom";
 
-interface RegisterProps {
-  onBack: () => void;
-}
+import logo from "../../../../assets/images/logo.png";
 
-export default function Register({ onBack }: RegisterProps) {
+import RegisterForm from "../../components/RegisterForm";
+
+export default function Register() {
+
+  const navigate = useNavigate();
+
   return (
+
     <div className="min-h-screen bg-white flex flex-col items-center px-6 pt-10 pb-6">
 
       <img
@@ -23,11 +26,13 @@ export default function Register({ onBack }: RegisterProps) {
 
       <button
         className="mt-4 text-sm text-gray-500 self-start"
-        onClick={onBack}
+        onClick={() => navigate("/cliente/login")}
       >
         &lt; Volver
       </button>
 
     </div>
+
   );
+
 }
