@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
@@ -34,4 +34,3 @@ See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rule
 =======
 # Ha-Way-Frontend
 Frontend de projecto Ha'Way
->>>>>>> 7f726aade2c3e63d1f5e787a6f87a20c81268711
