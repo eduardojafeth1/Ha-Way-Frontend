@@ -1,10 +1,8 @@
 import { Routes, Route } from "react-router-dom";
-
+import { PATHS } from "./path";
 import SelectRole from "../modules/auth/pages/common/SelectRole";
-
 import ClientLogin from "../modules/auth/pages/client/Login";
 import ClientRegister from "../modules/auth/pages/client/Register";
-
 import DriverLogin from "../modules/auth/pages/driver/loginDriver";
 
 export default function AppRoutes() {
@@ -14,22 +12,22 @@ export default function AppRoutes() {
     <Routes>
 
       <Route
-        path="/"
+        path={PATHS.HOME}
         element={<SelectRole />}
       />
 
       <Route
-        path="/cliente/login"
+        path={PATHS.CLIENT.LOGIN}
         element={<ClientLogin />}
       />
 
       <Route
-        path="/cliente/register"
+        path={PATHS.CLIENT.REGISTER}
         element={<ClientRegister />}
       />
 
       <Route
-        path="/conductor/login"
+        path={PATHS.DRIVER.LOGIN}
         element={<DriverLogin />}
       />
 
