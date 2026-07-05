@@ -53,7 +53,7 @@ export default function SelectRole() {
         Soy un:
       </h2>
 
-      <div className="w-full flex justify-center gap-4">
+      <div className="space-y-4 w-full flex flex-col items-center">
 
         <RoleButton
           text="Cliente"
