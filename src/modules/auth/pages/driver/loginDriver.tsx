@@ -58,6 +58,17 @@ export default function Login() {
           Iniciar sesión
         </button>
 
+        <p className="text-center text-sm text-gray-500">
+          ¿Quieres unirte al equipo de proveedores de Ha'Way?{" "}
+          <button
+            type="button"
+            onClick={() => navigate("/conductor/register")}
+            className="text-[var(--secondary)] font-medium"
+          >
+            Regístrate ahora
+          </button>
+        </p>
+
       </div>
 
       <button
