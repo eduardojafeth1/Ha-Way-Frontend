@@ -4,6 +4,7 @@ import SelectRole from "../modules/auth/pages/common/SelectRole";
 import ClientLogin from "../modules/auth/pages/client/Login";
 import ClientRegister from "../modules/auth/pages/client/Register";
 import DriverLogin from "../modules/auth/pages/driver/loginDriver";
+import DriverRegister from "../modules/auth/pages/driver/registerDriver";
 
 export default function AppRoutes() {
 
@@ -31,6 +32,11 @@ export default function AppRoutes() {
         element={<DriverLogin />}
       />
 
+      <Route
+        path={PATHS.DRIVER.REGISTER}
+        element={<DriverRegister />}
+      />
+      
     </Routes>
 
   );

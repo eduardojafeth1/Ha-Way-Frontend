@@ -8,6 +8,7 @@ export const PATHS = {
 
   DRIVER: {
     LOGIN: "/conductor/login",
+    REGISTER: "/conductor/register",
     
   },
 } as const;
