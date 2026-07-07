@@ -5,6 +5,7 @@ import ClientLogin from "../modules/auth/pages/client/Login";
 import ClientRegister from "../modules/auth/pages/client/Register";
 import DriverLogin from "../modules/auth/pages/driver/loginDriver";
 import DriverRegister from "../modules/auth/pages/driver/registerDriver";
+import CLientHome from "../modules/cliente/pages/Home";
 
 export default function AppRoutes() {
 
@@ -36,7 +37,11 @@ export default function AppRoutes() {
         path={PATHS.DRIVER.REGISTER}
         element={<DriverRegister />}
       />
-      
+
+      <Route
+        path={PATHS.CLIENT.HOME}
+        element={<CLientHome />}
+      />
     </Routes>
 
   );

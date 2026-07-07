@@ -1,5 +1,5 @@
 //import { FaPlus } from "react-icons/fa";
-import FileUpload from "../components/FileUpload";
+import FileUpload from "../FileUpload";
 
 interface DocumentsData {
   reason: string;

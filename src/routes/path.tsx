@@ -4,6 +4,7 @@ export const PATHS = {
   CLIENT: {
     LOGIN: "/cliente/login",
     REGISTER: "/cliente/register",
+    HOME: "/cliente/home",
   },
 
   DRIVER: {

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { PATHS } from "../../../../routes/path";
 
 import logo from "../../../../assets/images/logo.png";
 
@@ -53,6 +54,7 @@ export default function Login() {
 
         <button
           type="button"
+          
           className="mt-2 w-full bg-[var(--secondary)] text-white font-semibold py-4 rounded-xl text-base hover:opacity-90 active:scale-95 transition-all"
         >
           Iniciar sesión
@@ -62,7 +64,7 @@ export default function Login() {
           ¿Quieres unirte al equipo de proveedores de Ha'Way?{" "}
           <button
             type="button"
-            onClick={() => navigate("/conductor/register")}
+            onClick={() => navigate(PATHS.DRIVER.REGISTER)}
             className="text-[var(--secondary)] font-medium"
           >
             Regístrate ahora
@@ -73,7 +75,7 @@ export default function Login() {
 
       <button
         className="mt-auto text-sm text-gray-500 self-start"
-        onClick={() => navigate("/")}
+        onClick={() => navigate(PATHS.HOME)}
       >
         &lt; Volver
       </button>

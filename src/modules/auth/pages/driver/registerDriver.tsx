@@ -3,9 +3,10 @@ import { useNavigate } from "react-router-dom";
 
 import logo from "../../../../assets/images/logo.png";
 
-import StepProvider from "../../DriverRegister/StepOneRegDriver";
-import StepDocuments from "../../DriverRegister/StepTwoRegDriver";
-import StepTruck from "../../DriverRegister/StepThreeRegDriver";
+import ProgressIndicator from "../../components/DriverRegister/ProgressIndicator";
+import StepProvider from "../../components/DriverRegister/StepOneRegDriver";
+import StepDocuments from "../../components/DriverRegister/StepTwoRegDriver";
+import StepTruck from "../../components/DriverRegister/StepThreeRegDriver";
 
 import { PATHS } from "../../../../routes/path";
 
@@ -73,49 +74,7 @@ export default function Register() {
       />
 
       {/* Indicador de pasos */}
-      <div className="flex items-center gap-3 mb-8">
-
-        <div
-          className={`w-4 h-4 rounded-full ${
-            step >= 1
-              ? "bg-[var(--secondary)]"
-              : "bg-gray-300"
-          }`}
-        />
-
-        <div
-          className={`w-12 h-1 ${
-            step >= 2
-              ? "bg-[var(--secondary)]"
-              : "bg-gray-300"
-          }`}
-        />
-
-        <div
-          className={`w-4 h-4 rounded-full ${
-            step >= 2
-              ? "bg-[var(--secondary)]"
-              : "bg-gray-300"
-          }`}
-        />
-
-        <div
-          className={`w-12 h-1 ${
-            step >= 3
-              ? "bg-[var(--secondary)]"
-              : "bg-gray-300"
-          }`}
-        />
-
-        <div
-          className={`w-4 h-4 rounded-full ${
-            step === 3
-              ? "bg-[var(--secondary)]"
-              : "bg-gray-300"
-          }`}
-        />
-
-      </div>
+      <ProgressIndicator step={step} />
 
       {/* Título */}
 

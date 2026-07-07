@@ -2,6 +2,7 @@ import logo from "../../../../assets/images/logo.png";
 
 import InfoCard from "../../components/InfoCard";
 import RoleButton from "../../components/RoleButton";
+import { PATHS } from "../../../../routes/path";
 
 import {
   FaTruck,
@@ -59,14 +60,14 @@ export default function SelectRole() {
           text="Cliente"
           icon={<FaUser />}
           color="bg-[var(--primary)]"
-          onClick={() => navigate("/cliente/login")}
+          onClick={() => navigate(PATHS.CLIENT.LOGIN)}
         />
 
         <RoleButton
           text="Conductor"
           icon={<FaTruck />}
           color="bg-[var(--secondary)]"
-          onClick={() => navigate("/conductor/login")}
+          onClick={() => navigate(PATHS.DRIVER.LOGIN)}
         />
 
       </div>

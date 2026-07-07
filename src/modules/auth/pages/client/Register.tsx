@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-
+import { PATHS } from "../../../../routes/path";
 import logo from "../../../../assets/images/logo.png";
 
 import RegisterForm from "../../components/RegisterForm";
@@ -26,7 +26,7 @@ export default function Register() {
 
       <button
         className="mt-4 text-sm text-gray-500 self-start"
-        onClick={() => navigate("/cliente/login")}
+        onClick={() => navigate(PATHS.HOME)}
       >
         &lt; Volver
       </button>
