@@ -6,6 +6,10 @@ import ClientRegister from "../modules/auth/pages/client/Register";
 import DriverLogin from "../modules/auth/pages/driver/loginDriver";
 import DriverRegister from "../modules/auth/pages/driver/registerDriver";
 import CLientHome from "../modules/cliente/pages/Home";
+import DriverHome from "../modules/conductor/pages/Home";
+import DriverHistory from "../modules/conductor/pages/History";
+import SearchOrders from "../modules/conductor/pages/SearchOrders";
+
 
 export default function AppRoutes() {
 
@@ -42,6 +46,16 @@ export default function AppRoutes() {
         path={PATHS.CLIENT.HOME}
         element={<CLientHome />}
       />
+
+      <Route path={PATHS.DRIVER.HOME}
+        element={<DriverHome />} />
+
+      <Route path={PATHS.DRIVER.HISTORY}
+        element={<DriverHistory />} />
+
+      <Route path="/conductor/buscar-pedidos"
+        element={<SearchOrders />} />
+
     </Routes>
 
   );

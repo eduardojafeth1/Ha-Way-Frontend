@@ -54,7 +54,7 @@ export default function Login() {
 
         <button
           type="button"
-          
+          onClick={() => navigate(PATHS.DRIVER.HOME)}
           className="mt-2 w-full bg-[var(--secondary)] text-white font-semibold py-4 rounded-xl text-base hover:opacity-90 active:scale-95 transition-all"
         >
           Iniciar sesión

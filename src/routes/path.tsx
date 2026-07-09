@@ -10,6 +10,8 @@ export const PATHS = {
   DRIVER: {
     LOGIN: "/conductor/login",
     REGISTER: "/conductor/register",
-    
+    HOME: "/conductor/home",
+    HISTORY: "/conductor/historial",
+    SEARCH: "/conductor/buscar-pedidos",
   },
-} as const;
+};
