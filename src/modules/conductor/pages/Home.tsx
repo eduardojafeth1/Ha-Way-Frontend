@@ -56,7 +56,7 @@ function StatusBadge({ status }: { status: PreviousOrder["status"] }) {
 export default function DriverHome() {
     const navigate = useNavigate();
 
-    const driverName = "Juan Pérez";
+    const driverName = "Luis Rodriguez";
     const [pedidos] = useState<PreviousOrder[]>(PEDIDOS_MOCK);
 
     return (
@@ -190,7 +190,7 @@ export default function DriverHome() {
                     label="Notificaciones"
                     icon={<HiOutlineBell size={28} />}
                     active={false}
-                    onClick={() => { }}
+                    onClick={() => navigate(PATHS.DRIVER.NOTIFICATIONS)}
                 />
                 <NavItem
                     label="Inicio"
@@ -208,7 +208,7 @@ export default function DriverHome() {
                     label="Perfil"
                     icon={<HiOutlineUser size={28} />}
                     active={false}
-                    onClick={() => { }}
+                    onClick={() => navigate(PATHS.DRIVER.PROFILE)}
                 />
             </nav>
 

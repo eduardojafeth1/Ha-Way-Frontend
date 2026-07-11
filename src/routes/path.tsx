@@ -13,5 +13,8 @@ export const PATHS = {
     HOME: "/conductor/home",
     HISTORY: "/conductor/historial",
     SEARCH: "/conductor/buscar-pedidos",
+    PROFILE: "/conductor/perfil", 
+    NOTIFICATIONS: "/conductor/notificaciones",
+    TRACKING: (id: number | string) => `/conductor/pedido/${id}/seguimiento`,
   },
 };

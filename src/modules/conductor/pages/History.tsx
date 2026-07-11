@@ -79,7 +79,7 @@ export default function DriverHistory() {
     ==================================================
     */
 
-    const driverName = "Juan Pérez";
+    const driverName = "Luis Rodriguez";
 
     const [pedidos] = useState<PreviousOrder[]>(PEDIDOS_MOCK);
 
@@ -247,7 +247,7 @@ export default function DriverHistory() {
                     label="Notificaciones"
                     icon={<HiOutlineBell size={28} />}
                     active={false}
-                    onClick={() => { }}
+                    onClick={() => navigate(PATHS.DRIVER.NOTIFICATIONS)}
                 />
                 <NavItem
                     label="Inicio"
@@ -265,7 +265,7 @@ export default function DriverHistory() {
                     label="Perfil"
                     icon={<HiOutlineUser size={28} />}
                     active={false}
-                    onClick={() => { }}
+                    onClick={() => navigate(PATHS.DRIVER.PROFILE)}
                 />
             </nav>
 

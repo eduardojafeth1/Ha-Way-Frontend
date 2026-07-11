@@ -9,10 +9,12 @@ import CLientHome from "../modules/cliente/pages/Home";
 import DriverHome from "../modules/conductor/pages/Home";
 import DriverHistory from "../modules/conductor/pages/History";
 import SearchOrders from "../modules/conductor/pages/SearchOrders";
+import DriverProfile from "../modules/conductor/pages/Profile";
+import DriverNotifications from "../modules/conductor/pages/Notifications";
+import DriverOrderTracking from "../modules/conductor/pages/OrderTracking";
 
 
 export default function AppRoutes() {
-
   return (
 
     <Routes>
@@ -55,6 +57,22 @@ export default function AppRoutes() {
 
       <Route path="/conductor/buscar-pedidos"
         element={<SearchOrders />} />
+
+      <Route path={PATHS.DRIVER.PROFILE}
+    element={<DriverProfile />} />
+    
+    <Route path={PATHS.DRIVER.NOTIFICATIONS}
+    element={<DriverNotifications />} />
+
+    <Route
+        path="/conductor/pedido/:id/seguimiento"
+        element={<DriverOrderTracking />}
+      />
+
+    
+
+
+    
 
     </Routes>
 

@@ -120,7 +120,7 @@ export default function SearchOrders() {
                             </div>
 
                             <button
-                                onClick={() => console.log("Pedido seleccionado:", pedido.id)}
+                                onClick={() => navigate(PATHS.DRIVER.TRACKING(pedido.id))}
                                 className="text-[var(--primary)] font-bold text-lg leading-none"
                                 aria-label="Seleccionar pedido"
                             >
