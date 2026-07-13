@@ -12,6 +12,7 @@ import SearchOrders from "../modules/conductor/pages/SearchOrders";
 import DriverProfile from "../modules/conductor/pages/Profile";
 import DriverNotifications from "../modules/conductor/pages/Notifications";
 import DriverOrderTracking from "../modules/conductor/pages/OrderTracking";
+import CreateOrder from "../modules/cliente/pages/CreateOrder";
 
 
 export default function AppRoutes() {
@@ -49,32 +50,41 @@ export default function AppRoutes() {
         element={<CLientHome />}
       />
 
-      <Route path={PATHS.DRIVER.HOME}
-        element={<DriverHome />} />
+      <Route
+          path={PATHS.CLIENT.CREATEORDER}
+          element={<CreateOrder />}
+        />
 
-      <Route path={PATHS.DRIVER.HISTORY}
-        element={<DriverHistory />} />
-
-      <Route path="/conductor/buscar-pedidos"
-        element={<SearchOrders />} />
-
-      <Route path={PATHS.DRIVER.PROFILE}
-    element={<DriverProfile />} />
-    
-    <Route path={PATHS.DRIVER.NOTIFICATIONS}
-    element={<DriverNotifications />} />
-
-    <Route
-        path="/conductor/pedido/:id/seguimiento"
-        element={<DriverOrderTracking />}
+      <Route 
+        path={PATHS.DRIVER.HOME}
+        element={<DriverHome />} 
       />
 
-    
+      <Route 
+        path={PATHS.DRIVER.HISTORY}
+        element={<DriverHistory />} 
+      />
 
+      <Route 
+        path={PATHS.DRIVER.SEARCH}
+        element={<SearchOrders />} 
+      />
 
-    
+      <Route 
+        path={PATHS.DRIVER.PROFILE}
+        element={<DriverProfile />} 
+      />
+      
+      <Route 
+        path={PATHS.DRIVER.NOTIFICATIONS}
+        element={<DriverNotifications />} 
+      />
 
-    </Routes>
+      <Route
+          path={PATHS.DRIVER.TRACKING_CONFIG}
+          element={<DriverOrderTracking />}
+        />
+      </Routes>
 
   );
 

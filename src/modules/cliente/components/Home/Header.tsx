@@ -27,7 +27,7 @@ export default function Header({
           Hola,
         </p>
 
-        <h1 className="text-3xl font-semibold leading-none">
+        <h1 className="text-2xl font-semibold leading-none">
           {userName}
         </h1>
 

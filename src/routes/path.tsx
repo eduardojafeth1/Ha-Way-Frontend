@@ -5,6 +5,7 @@ export const PATHS = {
     LOGIN: "/cliente/login",
     REGISTER: "/cliente/register",
     HOME: "/cliente/home",
+    CREATEORDER:"/cliente/createorder",
   },
 
   DRIVER: {
@@ -16,5 +17,6 @@ export const PATHS = {
     PROFILE: "/conductor/perfil", 
     NOTIFICATIONS: "/conductor/notificaciones",
     TRACKING: (id: number | string) => `/conductor/pedido/${id}/seguimiento`,
+    TRACKING_CONFIG: "/conductor/pedido/:id/seguimiento", // Para el archivo AppRoutes.tsx
   },
 };

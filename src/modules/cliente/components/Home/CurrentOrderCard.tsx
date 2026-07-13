@@ -1,4 +1,4 @@
-import gota from "../../../assets/icons/gota_pedidoactual.svg";
+import gota from "../../../../assets/icons/gota_pedidoactual.svg";
 
 
 interface CurrentOrder {

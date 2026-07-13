@@ -1,4 +1,4 @@
-import waterTruckIcon from "../../../assets/images/water-truck-icon.svg";
+import waterTruckIcon from "../../../../assets/images/water-truck-icon.svg";
 
 interface RequestWaterCardProps {
   onClick: () => void;
@@ -34,7 +34,7 @@ export default function RequestWaterCard({
         className="w-28 mb-4"
       />
 
-      <span className="text-white text-3xl font-semibold">
+      <span className="text-white text-2xl font-semibold">
         SOLICITAR AGUA
       </span>
     </button>

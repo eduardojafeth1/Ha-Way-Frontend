@@ -1,15 +1,18 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {PATHS} from "../../../routes/path";
 
-import Header from "../components/Header";
-import RequestWaterCard from "../components/RequestWaterCard";
-import CurrentOrderCard from "../components/CurrentOrderCard";
-import PreviousOrdersCard from "../components/PreviousOrdersCard";
-import BottomNavigation from "../components/BottomNavigation";
+import Header from "../components/Home/Header";
+import RequestWaterCard from "../components/Home/RequestWaterCard";
+import CurrentOrderCard from "../components/Home/CurrentOrderCard";
+import PreviousOrdersCard from "../components/Home/PreviousOrdersCard";
+import BottomNavigation from "../components/Home/BottomNavigation";
 
 // Imagen temporal para pruebas
 //import waterImage from "../../../assets/images/water-example.jpg";
 
 export default function Home() {
+  const navigate = useNavigate();
   /*
   ==================================================
   BACKEND
@@ -116,13 +119,18 @@ export default function Home() {
             onClick={() => {
 
               /*
-              BACKEND
+              const hasActiveOrder = await orderService.hasActiveOrder();
 
-              navigate(PATHS.CLIENT.REQUEST_WATER);
-
+              if (hasActiveOrder) {
+                  toast.error("Ya tienes un pedido en curso.");
+                  return;
+              }
               */
 
-              console.log("Solicitar agua");
+              navigate(PATHS.CLIENT.CREATEORDER);
+
+
+              
 
             }}
           />

@@ -1,4 +1,4 @@
-import relojIcon from "../../../assets/icons/reloj_pedidosanteriores.svg";
+import relojIcon from "../../../../assets/icons/reloj_pedidosanteriores.svg";
 
 interface PreviousOrder {
   id: number;
