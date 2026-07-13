@@ -1,13 +1,16 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { PATHS } from "../../../routes/path";
-import { PREPARATION_TIME, HOURS, OPENING_HOUR, CLOSING_HOUR } from "../../../constants/schedule";
+import { PREPARATION_TIME, OPENING_HOUR, CLOSING_HOUR } from "../../../constants/schedule";
 
 import OrderQuantitySelector from "../components/CreateOrder/OrderQuantitySelector";
 import DeliveryLocationCard from "../components/CreateOrder/DeliveryLocationCard";
 import DeliverySchedule from "../components/CreateOrder/DeliverySchedule";
 import TimeSelector from "../components/CreateOrder/TimeSelector";
+import SavedAddressesModal from "../components/CreateOrder/Savedaddressesmodal";
+import MapPickerModal from "../components/CreateOrder/Mappickermodal";
 import PageHeader from "../components/PageHeader";
+import type { LocationData, SavedAddress } from "../components/CreateOrder/location.types";
 
 type DeliveryOption = "now" | "today" | "tomorrow";
 
@@ -15,7 +18,7 @@ type DeliveryOption = "now" | "today" | "tomorrow";
 
 interface OrderPayload {
   quantity: number;
-  address: string | null;
+  location: LocationData | null;
   schedule: DeliveryOption;
   time: string | null; // null si schedule === "now"
 }
@@ -30,24 +33,51 @@ export default function CreateOrder() {
 
   Aquí obtendremos:
 
-  - Dirección del usuario
+  - Direcciones guardadas del usuario
   - Cantidad disponible
-  - Ubicación actual
+  - Ubicación actual / dirección por defecto
 
   const user = await userService.getProfile();
 
   const availableBarrels =
       await providerService.getAvailableBarrels();
 
+  const savedAddresses: SavedAddress[] =
+      await userService.getSavedAddresses();
+
   const defaultAddress =
-      await userService.getDefaultAddress(); // string | null
+      savedAddresses.find((a) => a.id === user.defaultAddressId) ?? null;
 
   ===========================================================
   */
 
-  const [savedAddress] = useState<string | null>(
-    "Colonia Palmira, Tegucigalpa"
+  // Direcciones guardadas (mock mientras no hay backend)
+
+  const [savedAddresses] = useState<SavedAddress[]>([
+    {
+      id: 1,
+      label: "Casa",
+      address: "Colonia Palmira, Tegucigalpa",
+      lat: null,
+      lng: null,
+    },
+    {
+      id: 2,
+      label: "Oficina",
+      address: "Boulevard Morazán, Tegucigalpa",
+      lat: null,
+      lng: null,
+    },
+  ]);
+
+  const [selectedAddressId, setSelectedAddressId] = useState<number | null>(1);
+
+  const [location, setLocation] = useState<LocationData | null>(
+    savedAddresses[0] ?? null
   );
+
+  const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+  const [isMapModalOpen, setIsMapModalOpen] = useState(false);
 
   const [quantity, setQuantity] = useState(20);
 
@@ -56,7 +86,7 @@ export default function CreateOrder() {
   const [time, setTime] = useState<string | null>(null);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const isWithinWorkingHoursNow = useMemo(() => {
 
     const now = new Date();
@@ -75,24 +105,50 @@ export default function CreateOrder() {
   }, []);
 
   // El pedido es válido si:
-  // - hay dirección
+  // - hay una ubicación seleccionada
   // - si el schedule requiere hora (today/tomorrow), esa hora debe existir
+  // - si el schedule es "now", debe estar dentro de horario laboral
 
   const isValid = useMemo(() => {
 
-    if (!savedAddress) return false;
+    if (!location) return false;
 
     if (schedule === "now") {
       return isWithinWorkingHoursNow;
     }
 
-    // today / tomorrow requieren hora seleccionada
-
     if (!time) return false;
 
     return true;
 
-  }, [savedAddress, schedule, time, isWithinWorkingHoursNow]);
+  }, [location, schedule, time, isWithinWorkingHoursNow]);
+
+  // Selección de una dirección guardada
+
+  const handleSelectSavedAddress = (item: SavedAddress) => {
+
+    setSelectedAddressId(item.id);
+
+    setLocation({
+      address: item.address,
+      lat: item.lat,
+      lng: item.lng,
+    });
+
+    setIsAddressModalOpen(false);
+
+  };
+
+  // Confirmación de ubicación desde el mapa
+
+  const handleConfirmMapLocation = (newLocation: LocationData) => {
+
+    setSelectedAddressId(null); // ya no corresponde a una dirección guardada
+    setLocation(newLocation);
+    setIsMapModalOpen(false);
+    setIsAddressModalOpen(false);
+
+  };
 
   const handleSubmit = async () => {
 
@@ -100,7 +156,7 @@ export default function CreateOrder() {
 
     const payload: OrderPayload = {
       quantity,
-      address: savedAddress,
+      location,
       schedule,
       time: schedule === "now" ? null : time,
     };
@@ -136,7 +192,13 @@ export default function CreateOrder() {
     =========================================
     */
 
-    setIsSubmitting(false);
+    setTimeout(() => {
+
+      setIsSubmitting(false);
+
+      navigate(PATHS.CLIENT.WAITING);
+
+    }, 1000);
 
   };
 
@@ -176,34 +238,9 @@ export default function CreateOrder() {
           </h2>
 
           <DeliveryLocationCard
-            address={savedAddress}
-
-            onAddressClick={() => {
-
-              /*
-              BACKEND
-
-              Mostrar direcciones guardadas
-              */
-
-            }}
-
-            onMapClick={() => {
-
-              /*
-              BACKEND
-
-              Abrir Google Maps
-
-              Cuando el usuario confirme una ubicación en el mapa,
-              aquí se debería actualizar la dirección/coordenadas,
-              por ejemplo:
-
-              setSavedAddress(nuevaDireccion);
-
-              */
-
-            }}
+            address={location?.address ?? null}
+            onAddressClick={() => setIsAddressModalOpen(true)}
+            onMapClick={() => setIsMapModalOpen(true)}
           />
 
         </section>
@@ -241,6 +278,13 @@ export default function CreateOrder() {
 
         </section>
 
+        {schedule === "now" && !isWithinWorkingHoursNow && (
+          <p className="text-sm text-red-500 font-medium -mt-4">
+            Ya no es posible enviar tu pedido de inmediato, estamos fuera de horario.
+            Selecciona "Hoy" o "Mañana" para elegir una hora.
+          </p>
+        )}
+
         {/* Botón */}
 
         <button
@@ -264,6 +308,27 @@ export default function CreateOrder() {
         </button>
 
       </div>
+
+      {/* Modales */}
+
+      <SavedAddressesModal
+        isOpen={isAddressModalOpen}
+        addresses={savedAddresses}
+        selectedId={selectedAddressId}
+        onSelect={handleSelectSavedAddress}
+        onAddNew={() => {
+          setIsAddressModalOpen(false);
+          setIsMapModalOpen(true);
+        }}
+        onClose={() => setIsAddressModalOpen(false)}
+      />
+
+      <MapPickerModal
+        isOpen={isMapModalOpen}
+        initialAddress={location?.address ?? null}
+        onConfirm={handleConfirmMapLocation}
+        onClose={() => setIsMapModalOpen(false)}
+      />
 
     </div>
   );
