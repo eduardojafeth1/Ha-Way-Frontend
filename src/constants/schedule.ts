@@ -10,10 +10,7 @@ export const HOURS = [
   { label: "02:00 PM", hour: 14 },
   { label: "03:00 PM", hour: 15 },
   { label: "04:00 PM", hour: 16 },
-  { label: "05:00 PM", hour: 17 },
-  { label: "06:00 PM", hour: 18 },
-  { label: "07:00 PM", hour: 19 },
-  { label: "08:00 PM", hour: 20 },
+
 ];
 
 export const OPENING_HOUR = HOURS[0].hour; // 8
