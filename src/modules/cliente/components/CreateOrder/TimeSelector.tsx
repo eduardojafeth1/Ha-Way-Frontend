@@ -139,7 +139,9 @@ export default function TimeSelector({
     return (
       <div className="bg-white border border-gray-200 rounded-2xl p-5 text-center">
         <p className="text-red-500 font-semibold">
-           Ya no es posible enviar tu pedido de inmediato, estamos fuera de horario.
+           {schedule === "now"
+            ? "Ya no es posible enviar tu pedido de inmediato, estamos fuera de horario."
+            : "Ya no hay horarios disponibles para hoy."}
         
         </p>
 
