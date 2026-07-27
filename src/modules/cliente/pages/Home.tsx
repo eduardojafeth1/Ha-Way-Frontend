@@ -97,17 +97,9 @@ export default function Home() {
       <Header
         userName={userName}
         onLogout={() => {
-          /*
-          BACKEND
-
-          await authService.logout();
-
           localStorage.removeItem("token");
-
-          navigate(PATHS.AUTH.LOGIN);
-          */
-
-          console.log("Cerrar sesión");
+          localStorage.removeItem("userRole");
+          navigate(PATHS.HOME);
         }}
       />
 
@@ -195,11 +187,7 @@ export default function Home() {
 
         }}
         onProfileClick={() => {
-
-          /*
           navigate(PATHS.CLIENT.PROFILE);
-          */
-
         }}
       />
 

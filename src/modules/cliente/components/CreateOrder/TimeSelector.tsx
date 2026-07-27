@@ -22,7 +22,7 @@ export default function TimeSelector({
 
   // Rango de minutos (desde medianoche) permitido según el tipo de entrega
 
-  const { minMinutes, maxMinutes, noAvailability } = useMemo(() => {
+  const { minMinutes, noAvailability } = useMemo(() => {
 
     const closing = CLOSING_HOUR * 60;
     const opening = OPENING_HOUR * 60;

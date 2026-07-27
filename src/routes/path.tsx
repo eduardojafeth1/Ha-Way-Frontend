@@ -6,6 +6,8 @@ export const PATHS = {
     REGISTER: "/cliente/register",
     HOME: "/cliente/home",
     CREATEORDER:"/cliente/createorder",
+    WAITING: "/cliente/esperando-conductor",
+    PROFILE: "/cliente/perfil",
   },
 
   DRIVER: {

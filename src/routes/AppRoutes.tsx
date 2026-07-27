@@ -13,6 +13,9 @@ import DriverProfile from "../modules/conductor/pages/Profile";
 import DriverNotifications from "../modules/conductor/pages/Notifications";
 import DriverOrderTracking from "../modules/conductor/pages/OrderTracking";
 import CreateOrder from "../modules/cliente/pages/CreateOrder";
+import WaitingDriver from "../modules/cliente/pages/WaitingDriver";
+import ProtectedRoute from "./ProtectedRoute";
+import ClientProfile from "../modules/cliente/pages/Profile";
 
 
 export default function AppRoutes() {
@@ -20,6 +23,7 @@ export default function AppRoutes() {
 
     <Routes>
 
+      {/* Rutas Públicas */}
       <Route
         path={PATHS.HOME}
         element={<SelectRole />}
@@ -45,47 +49,61 @@ export default function AppRoutes() {
         element={<DriverRegister />}
       />
 
-      <Route
-        path={PATHS.CLIENT.HOME}
-        element={<CLientHome />}
-      />
+      {/* Rutas Privadas Cliente */}
+      <Route element={<ProtectedRoute allowedRoles={["CLIENTE"]} />}>
+        <Route
+          path={PATHS.CLIENT.HOME}
+          element={<CLientHome />}
+        />
 
-      <Route
+        <Route
           path={PATHS.CLIENT.CREATEORDER}
           element={<CreateOrder />}
         />
 
-      <Route 
-        path={PATHS.DRIVER.HOME}
-        element={<DriverHome />} 
-      />
+        <Route
+          path={PATHS.CLIENT.WAITING}
+          element={<WaitingDriver />}
+        />
 
-      <Route 
-        path={PATHS.DRIVER.HISTORY}
-        element={<DriverHistory />} 
-      />
+        <Route
+          path={PATHS.CLIENT.PROFILE}
+          element={<ClientProfile />}
+        />
+      </Route>
 
-      <Route 
-        path={PATHS.DRIVER.SEARCH}
-        element={<SearchOrders />} 
-      />
+      {/* Rutas Privadas Conductor */}
+      <Route element={<ProtectedRoute allowedRoles={["CONDUCTOR"]} />}>
+        <Route 
+          path={PATHS.DRIVER.HOME}
+          element={<DriverHome />} 
+        />
 
-      <Route 
-        path={PATHS.DRIVER.PROFILE}
-        element={<DriverProfile />} 
-      />
-      
-      <Route 
-        path={PATHS.DRIVER.NOTIFICATIONS}
-        element={<DriverNotifications />} 
-      />
+        <Route 
+          path={PATHS.DRIVER.HISTORY}
+          element={<DriverHistory />} 
+        />
 
-      <Route
+        <Route 
+          path={PATHS.DRIVER.SEARCH}
+          element={<SearchOrders />} 
+        />
+
+        <Route 
+          path={PATHS.DRIVER.PROFILE}
+          element={<DriverProfile />} 
+        />
+        
+        <Route 
+          path={PATHS.DRIVER.NOTIFICATIONS}
+          element={<DriverNotifications />} 
+        />
+
+        <Route
           path={PATHS.DRIVER.TRACKING_CONFIG}
           element={<DriverOrderTracking />}
         />
-      </Routes>
-
+      </Route>
+    </Routes>
   );
-
 }
