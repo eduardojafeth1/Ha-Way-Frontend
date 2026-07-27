@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-
+import {PATHS} from "../../../routes/path";
 import PageHeader from "../components/PageHeader";
 
 import { FaTint } from "react-icons/fa";
@@ -12,35 +12,53 @@ export default function WaitingDriver() {
     useEffect(() => {
 
         /*
-        =====================================================
+        ===================================================
 
         BACKEND
 
-        Aquí comenzará un polling al backend.
+        Aquí se consultará el estado del pedido.
 
         Ejemplo:
 
         const interval = setInterval(async () => {
 
             const response =
-                await orderService.checkOrderStatus(orderId);
+                await orderService.checkOffers(orderId);
 
-            if(response.status === "accepted"){
+            if(response.totalOffers >= 3){
 
                 clearInterval(interval);
 
-                navigate("/cliente/order-tracking");
+                navigate(PATHS.CLIENT.NEARBY_PROVIDERS, {
+
+                    state: {
+
+                        providers: response.providers,
+
+                    },
+
+                });
 
             }
 
-        }, 5000);
+        },5000);
 
         return () => clearInterval(interval);
 
-        =====================================================
+        ===================================================
         */
 
-    }, []);
+        // Simulación temporal
+
+        const timer = setTimeout(() => {
+
+            navigate(PATHS.CLIENT.NEARBY_PROVIDERS);
+
+        },8000);
+
+        return () => clearTimeout(timer);
+
+    }, [navigate]);
 
     return (
         <div className="min-h-screen bg-white flex flex-col">
@@ -76,7 +94,7 @@ export default function WaitingDriver() {
                             w-24
                             h-24
                             rounded-full
-                            bg-[var(--primary)]
+                            bg-(--primary)
                             flex
                             items-center
                             justify-center
@@ -91,7 +109,7 @@ export default function WaitingDriver() {
                     </div>
 
                     {/* Título configurado en una sola línea */}
-                    <h2 className="text-2xl md:text-3xl font-bold text-[var(--primary)] text-center whitespace-nowrap">
+                    <h2 className="text-2xl md:text-3xl font-bold text-(--primary) text-center whitespace-nowrap">
                         Buscando cisternas...
                     </h2>
 

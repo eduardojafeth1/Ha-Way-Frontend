@@ -13,6 +13,8 @@ import DriverProfile from "../modules/conductor/pages/Profile";
 import DriverNotifications from "../modules/conductor/pages/Notifications";
 import DriverOrderTracking from "../modules/conductor/pages/OrderTracking";
 import CreateOrder from "../modules/cliente/pages/CreateOrder";
+import WaitingDriver from "../modules/cliente/pages/WaitingDriver";
+import NearbyProviders from "../modules/cliente/pages/NearbyProviders";
 
 
 export default function AppRoutes() {
@@ -53,7 +55,17 @@ export default function AppRoutes() {
       <Route
           path={PATHS.CLIENT.CREATEORDER}
           element={<CreateOrder />}
-        />
+      />
+
+      <Route
+        path={PATHS.CLIENT.WAITING}
+        element={<WaitingDriver/>}
+      />
+
+      <Route
+        path={PATHS.CLIENT.NEARBY_PROVIDERS}
+        element={<NearbyProviders />}
+      />
 
       <Route 
         path={PATHS.DRIVER.HOME}

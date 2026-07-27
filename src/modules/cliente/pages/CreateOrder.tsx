@@ -278,13 +278,6 @@ export default function CreateOrder() {
 
         </section>
 
-        {schedule === "now" && !isWithinWorkingHoursNow && (
-          <p className="text-sm text-red-500 font-medium -mt-4">
-            Ya no es posible enviar tu pedido de inmediato, estamos fuera de horario.
-            Selecciona "Hoy" o "Mañana" para elegir una hora.
-          </p>
-        )}
-
         {/* Botón */}
 
         <button
