@@ -1,15 +1,47 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { PATHS } from "../../../../routes/path";
-
 import logo from "../../../../assets/images/logo.png";
-
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { postJson } from "../../../../services/api";
 
 export default function Login() {
   const navigate = useNavigate();
 
   const [showPassword, setShowPassword] = useState(false);
+  const [correo, setCorreo] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async () => {
+    setError("");
+    if (!correo || !password) {
+      setError("Por favor completa todos los campos.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await postJson("/auth/login", { correo, password });
+      
+      // Guardar en localStorage
+      localStorage.setItem("token", response.token);
+      localStorage.setItem("userRole", response.usuario.rol);
+      
+      // Redirigir según el rol
+      if (response.usuario.rol === "CLIENTE") {
+        navigate(PATHS.CLIENT.HOME);
+      } else {
+        setError("Acceso denegado. Rol incorrecto para esta vista.");
+      }
+    } catch (err: any) {
+      setError(err.message || "Credenciales incorrectas.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white flex flex-col items-center px-6 pt-10 pb-6">
@@ -25,10 +57,17 @@ export default function Login() {
       </h1>
 
       <div className="w-full flex flex-col gap-4">
+        {error && (
+          <div className="bg-red-50 text-red-600 text-sm font-medium p-3 rounded-lg border border-red-200">
+            {error}
+          </div>
+        )}
 
         <input
           type="email"
           placeholder="Correo"
+          value={correo}
+          onChange={(e) => setCorreo(e.target.value)}
           className="border border-gray-300 rounded-lg px-4 py-3 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
         />
 
@@ -37,6 +76,8 @@ export default function Login() {
           <input
             type={showPassword ? "text" : "password"}
             placeholder="Contraseña"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             className="w-full border border-gray-300 rounded-lg px-4 py-3 pr-12 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
           />
 
@@ -52,25 +93,18 @@ export default function Login() {
 
         <button
           type="button"
-          onClick={() => {
-            /*
-            ==========================
-            BACKEND
-            ==========================
-
-            const response = await authService.login(email, password);
-
-            if (response.ok) {
-              navigate(PATHS.CLIENT.HOME);
-            }
-
-            */
-
-            navigate(PATHS.CLIENT.HOME);
-          }}
-          className="mt-2 w-full bg-[var(--primary)] text-white font-semibold py-4 rounded-xl text-base hover:opacity-90 active:scale-95 transition-all"
+          disabled={loading}
+          onClick={handleLogin}
+          className={`mt-2 w-full bg-[var(--primary)] text-white font-semibold py-4 rounded-xl text-base hover:opacity-90 active:scale-95 transition-all flex items-center justify-center gap-2 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
         >
-          Iniciar sesión
+          {loading ? (
+            <>
+              <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+              Iniciando sesión...
+            </>
+          ) : (
+            "Iniciar sesión"
+          )}
         </button>
 
         <p className="text-center text-sm text-gray-500">

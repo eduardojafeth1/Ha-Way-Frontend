@@ -5,6 +5,7 @@ interface ProviderData {
   companyName: string;
   rtn: string;
   ownerName: string;
+  identidad: string;
   phone: string;
   email: string;
   password: string;
@@ -71,6 +72,21 @@ export default function StepProvider({
           type="text"
           value={formData.ownerName}
           onChange={(e) => handleChange("ownerName", e.target.value)}
+          className="w-full border border-gray-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[var(--secondary)]"
+        />
+      </div>
+
+      {/* Identidad (DNI) */}
+      <div>
+        <label className="block text-sm font-medium mb-2">
+          Identidad (DNI)
+        </label>
+
+        <input
+          type="text"
+          placeholder="Ej. 0801199512345"
+          value={formData.identidad}
+          onChange={(e) => handleChange("identidad", e.target.value)}
           className="w-full border border-gray-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[var(--secondary)]"
         />
       </div>

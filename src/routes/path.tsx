@@ -8,6 +8,8 @@ export const PATHS = {
     CREATEORDER:"/cliente/createorder",
     WAITING: "/cliente/waiting",
     NEARBY_PROVIDERS: "/cliente/nearby-providers",
+    //WAITING: "/cliente/esperando-conductor",
+    PROFILE: "/cliente/perfil",
   },
 
   DRIVER: {

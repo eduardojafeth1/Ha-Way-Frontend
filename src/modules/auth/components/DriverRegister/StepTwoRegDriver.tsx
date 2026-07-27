@@ -5,6 +5,8 @@ interface DocumentsData {
   reason: string;
   cv: File | null;
   license: File | null;
+  licenseNumber: string;
+  licenseExpiration: string;
   profilePhoto: File | null;
 }
 
@@ -65,6 +67,43 @@ export default function StepDocuments({
         accept=".pdf,image/*"
         onFileChange={(file) => handleFileChange("license", file)}
       />
+
+      {/* Número de licencia */}
+      <div>
+        <label className="block text-sm font-medium mb-2">
+          Número de Licencia
+        </label>
+        <input
+          type="text"
+          placeholder="Ej. LIC-123456"
+          value={formData.licenseNumber}
+          onChange={(e) =>
+            setFormData((prev: any) => ({
+              ...prev,
+              licenseNumber: e.target.value,
+            }))
+          }
+          className="w-full border border-gray-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[var(--secondary)]"
+        />
+      </div>
+
+      {/* Fecha de vencimiento de licencia */}
+      <div>
+        <label className="block text-sm font-medium mb-2">
+          Fecha de vencimiento de Licencia
+        </label>
+        <input
+          type="date"
+          value={formData.licenseExpiration}
+          onChange={(e) =>
+            setFormData((prev: any) => ({
+              ...prev,
+              licenseExpiration: e.target.value,
+            }))
+          }
+          className="w-full border border-gray-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[var(--secondary)]"
+        />
+      </div>
 
       <FileUpload
         label="Foto de perfil"
