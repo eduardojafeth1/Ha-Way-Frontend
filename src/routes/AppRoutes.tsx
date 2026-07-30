@@ -17,7 +17,9 @@ import WaitingDriver from "../modules/cliente/pages/WaitingDriver";
 import NearbyProviders from "../modules/cliente/pages/NearbyProviders";
 import ProtectedRoute from "./ProtectedRoute";
 import ClientProfile from "../modules/cliente/pages/Profile";
-
+import OrderSummary from "../modules/cliente/pages/OrderSummary";
+import AddCard from "../modules/cliente/pages/AddCard";
+import OrderTracking from "../modules/cliente/pages/OrderTracking";
 
 export default function AppRoutes() {
   return (
@@ -57,25 +59,36 @@ export default function AppRoutes() {
           element={<CLientHome />}
         />
 
-        <Route
-          path={PATHS.CLIENT.CREATEORDER}
-          element={<CreateOrder />}
-      />
-
-      <Route
-        path={PATHS.CLIENT.WAITING}
-        element={<WaitingDriver/>}
-      />
-
-      <Route
-        path={PATHS.CLIENT.NEARBY_PROVIDERS}
-        element={<NearbyProviders />}
-      />
+          <Route
+            path={PATHS.CLIENT.CREATEORDER}
+            element={<CreateOrder />}
+        />
 
         <Route
           path={PATHS.CLIENT.WAITING}
-          element={<WaitingDriver />}
+          element={<WaitingDriver/>}
         />
+
+        <Route
+          path={PATHS.CLIENT.NEARBY_PROVIDERS}
+          element={<NearbyProviders />}
+        />
+
+        <Route
+          path={PATHS.CLIENT.ORDER_SUMMARY}
+          element={<OrderSummary />}
+        />
+
+        <Route
+          path={PATHS.CLIENT.ADD_CARD}
+          element={<AddCard />}
+        />
+
+        <Route
+          path={PATHS.CLIENT.ORDER_TRACKING}
+          element={<OrderTracking />}
+        />
+                
 
         <Route
           path={PATHS.CLIENT.PROFILE}

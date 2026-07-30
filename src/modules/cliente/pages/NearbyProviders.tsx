@@ -172,7 +172,7 @@ export default function NearbyProviders() {
 
       console.log("Proveedor seleccionado:", selectedProvider);
 
-      // navigate(PATHS.CLIENT.ORDER_TRACKING);
+      navigate(PATHS.CLIENT.ORDER_SUMMARY);
 
     }, 1000);
   };
