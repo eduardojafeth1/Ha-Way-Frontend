@@ -29,6 +29,7 @@ export default function Login() {
       // Guardar en localStorage
       localStorage.setItem("token", response.token);
       localStorage.setItem("userRole", response.usuario.rol);
+      localStorage.setItem("userName", response.usuario.nombre);
       
       // Redirigir según el rol
       if (response.usuario.rol === "CONDUCTOR") {

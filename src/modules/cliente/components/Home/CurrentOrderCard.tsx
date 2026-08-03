@@ -14,16 +14,19 @@ interface CurrentOrder {
 
 interface CurrentOrderCardProps {
   order: CurrentOrder | null;
-  onViewDetail: (orderId: number) => void;
+  hasMore?: boolean;
+  onViewAll?: () => void;
+  onViewDetail: (orderId: number, type: string) => void;
 }
 
 export default function CurrentOrderCard({
   order,
+  hasMore,
+  onViewAll,
   onViewDetail,
 }: CurrentOrderCardProps) {
   if (!order) {
     return (
-
       <div className="bg-white rounded-xl shadow-md p-1">
         <div className="flex items-center gap-0.5 mb-1">
           <img
@@ -55,14 +58,21 @@ export default function CurrentOrderCard({
     <div className="bg-white rounded-xl shadow-md p-4">
 
       {/* Título */}
-      <div className="flex items-center gap-2 mb-4">
-
-        <div className="w-3 h-3 bg-blue-500 rounded-full" />
-
-        <h2 className="text-xl font-bold">
-          Pedido actual
-        </h2>
-
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse" />
+          <h2 className="text-xl font-bold">
+            Pedido actual
+          </h2>
+        </div>
+        {hasMore && onViewAll && (
+          <button 
+            onClick={onViewAll}
+            className="text-sm font-medium text-blue-500 hover:text-blue-700"
+          >
+            Ver todo
+          </button>
+        )}
       </div>
 
       {/* Contenido */}
@@ -79,56 +89,43 @@ export default function CurrentOrderCard({
         <div className="flex-1">
 
           <div className="flex justify-between items-start">
-
             <div>
               <h3 className="text-lg font-semibold text-cyan-500">
                 {order.supplierName}
               </h3>
-
               <p className="text-gray-700">
                 {order.barrels} barriles
               </p>
-
               <p className="text-gray-500 text-sm">
                 {order.date}
               </p>
             </div>
 
             <div className="text-right">
-
               <span className="border border-red-500 text-red-500 px-3 py-1 rounded-md text-sm">
                 {order.status}
               </span>
-
               <p className="text-gray-400 text-sm mt-1">
                 {order.estimatedTime}
               </p>
-
             </div>
-
           </div>
 
           <div className="mt-3 text-right">
-
             <span className="text-gray-700">
               Total a pagar:
             </span>
-
             <span className="font-bold text-2xl ml-2">
               L. {order.total.toFixed(2)}
             </span>
-
           </div>
-
         </div>
-
       </div>
 
       {/* Botón */}
       <div className="flex justify-center mt-5">
-
         <button
-          onClick={() => onViewDetail(order.id)}
+          onClick={() => onViewDetail(order.id, (order as any).type)}
           className="
             bg-[var(--primary)]
             text-white
@@ -142,9 +139,7 @@ export default function CurrentOrderCard({
         >
           Ver detalle
         </button>
-
       </div>
-
     </div>
   );
 }

@@ -112,8 +112,8 @@ export default function DeliveryLocationCard({
 
         <div className="text-left">
 
-          <h3 className={`font-semibold ${selected === "map" ? "text-white" : "text-gray-800"}`}>
-            Ver en mapa
+          <h3 className={`font-semibold ${selected === "map" ? "text-white" : "text-white-900"}`}>
+            Ver en mapa 
           </h3>
 
           <p className={`text-sm ${selected === "map" ? "text-white/80" : "text-gray-500"}`}>

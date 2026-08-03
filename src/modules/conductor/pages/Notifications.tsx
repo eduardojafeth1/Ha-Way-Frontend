@@ -1,93 +1,69 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PATHS } from "../../../routes/path";
-import gota from "../../../assets/icons/gota_pedidoactual.svg";
-import {
-    HiOutlineBell,
-    HiOutlineHome,
-    HiOutlineTruck,
-    HiOutlineUser,
-} from "react-icons/hi2";
+import { HiOutlineBell } from "react-icons/hi2";
+import { getJson, putJson } from "../../../services/api";
+import DriverBottomNav from "../components/DriverBottomNav";
 
 interface Notification {
-    id: number;
-    orderNumber: string;
-    supplierName: string;
-    status: string;
-    message: string;
+    id_notificacion: number;
+    titulo: string;
+    mensaje: string;
+    tipo: string;
+    leida: boolean;
+    fecha: string;
+    id_referencia?: number;
 }
-
-const NOTIFICACIONES_MOCK: Notification[] = [
-    {
-        id: 1,
-        orderNumber: "00001",
-        supplierName: "Agua Pura Exp.",
-        status: "Entregando",
-        message:
-            "El camión ha llegado a su destino y está listo para hacer la entrega.",
-    },
-];
 
 function NotificationItem({
     notification,
-    onViewDetail,
+    onMarkAsRead,
 }: {
     notification: Notification;
-    onViewDetail: (id: number) => void;
+    onMarkAsRead: (id: number) => void;
 }) {
+    const navigate = useNavigate();
+
     return (
-        <div className="bg-white rounded-xl shadow-md p-4">
+        <div className={`bg-white rounded-xl shadow-sm p-4 border border-gray-100 transition-all mb-3 ${!notification.leida ? 'border-l-4 border-l-[var(--primary)] bg-blue-50/20' : 'opacity-80'}`}>
 
-            {/* Título */}
-            <div className="flex items-center gap-2 mb-3">
-
-                <img src={gota} alt="" className="w-6 h-6" />
-
-                <h2 className="font-bold text-gray-900">
-                    Notificación: Pedido N°{notification.orderNumber}
+            {/* Título e Ícono */}
+            <div className="flex items-center gap-2 mb-2">
+                <div className="p-2 bg-blue-100 text-[var(--primary)] rounded-full">
+                    <HiOutlineBell size={18} />
+                </div>
+                <h2 className="font-bold text-gray-900 flex-1 text-sm">
+                    {notification.titulo}
                 </h2>
-
-            </div>
-
-            {/* Proveedor y estado */}
-            <div className="flex items-center justify-between mb-3">
-
-                <span className="font-semibold text-cyan-500">
-                    {notification.supplierName}
-                </span>
-
-                <span className="border border-red-500 text-red-500 px-3 py-1 rounded-md text-sm">
-                    {notification.status}
-                </span>
-
+                {!notification.leida && (
+                    <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                )}
             </div>
 
             {/* Mensaje */}
-            <p className="text-gray-700 text-sm mb-4">
-                {notification.message}
+            <p className="text-gray-700 text-sm mb-3 pl-11">
+                {notification.mensaje}
             </p>
 
-            {/* Botón */}
-            <div className="flex justify-center">
-
+            {/* Pie de la tarjeta */}
+            <div className="flex items-center justify-between pl-11">
+                <span className="text-xs text-gray-500 font-medium">
+                    {new Date(notification.fecha).toLocaleString()}
+                </span>
+                
                 <button
-                    onClick={() => onViewDetail(notification.id)}
-                    className="
-                        bg-[var(--primary)]
-                        text-white
-                        px-8
-                        py-2
-                        rounded-lg
-                        font-medium
-                        hover:opacity-90
-                        transition
-                    "
+                    onClick={() => {
+                        onMarkAsRead(notification.id_notificacion);
+                        if (notification.id_referencia) {
+                            navigate(PATHS.DRIVER.TRACKING(notification.id_referencia));
+                        }
+                    }}
+                    className="text-[var(--primary)] font-bold text-sm hover:underline"
                 >
                     Ver detalle
                 </button>
-
             </div>
-
+            
         </div>
     );
 }
@@ -95,14 +71,48 @@ function NotificationItem({
 export default function DriverNotifications() {
     const navigate = useNavigate();
 
-    const driverName = "Luis Rodriguez";
-    const [notifications] = useState<Notification[]>(NOTIFICACIONES_MOCK);
+    const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+
+    const driverName = localStorage.getItem("userName") || "Conductor";
+
+    const fetchNotifications = async () => {
+        try {
+            const data = await getJson("/conductor/notificaciones");
+            setNotifications(data);
+        } catch (err: any) {
+            setError("Error al cargar notificaciones.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchNotifications();
+
+        const intervalId = setInterval(() => {
+            fetchNotifications();
+        }, 10000); // 10 segundos
+
+        return () => clearInterval(intervalId);
+    }, []);
+
+    const handleMarkAsRead = async (id: number) => {
+        try {
+            await putJson(`/conductor/notificaciones/${id}/leida`, {});
+            // Actualizar localmente
+            setNotifications(prev => prev.map(n => n.id_notificacion === id ? { ...n, leida: true } : n));
+        } catch (err) {
+            console.error("Error al marcar como leída", err);
+        }
+    };
 
     return (
         <div className="min-h-screen bg-gray-100 pb-28">
 
             {/* ── HEADER ── */}
-            <header className="relative w-full bg-[var(--primary)] rounded-b-[40px] px-6 pt-8 pb-10 text-white">
+            <header className="relative w-full bg-[var(--secondary)] rounded-b-[40px] px-6 pt-8 pb-10 text-white">
                 <button
                     onClick={() => navigate(PATHS.HOME)}
                     className="absolute top-8 right-6 text-2xl hover:scale-110 transition-transform"
@@ -120,100 +130,35 @@ export default function DriverNotifications() {
                 </div>
             </header>
 
-            <main className="px-5 mt-6 space-y-4">
+            {/* Contenido Principal */}
+            <main className="px-6 pt-6 pb-6">
+                {error && <p className="text-red-500 text-center mb-4">{error}</p>}
 
-                {notifications.length === 0 ? (
-
-                    <div className="flex flex-col items-center justify-center py-20 text-center">
-                        <p className="text-gray-400 text-lg font-semibold">
-                            No tienes notificaciones
-                        </p>
+                {loading ? (
+                    <div className="flex justify-center items-center py-10">
+                        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[var(--primary)]"></div>
                     </div>
-
+                ) : notifications.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-20 opacity-50">
+                        <HiOutlineBell size={48} className="text-gray-400 mb-4" />
+                        <p className="text-gray-500 font-medium">No tienes notificaciones</p>
+                    </div>
                 ) : (
-
-                    notifications.map((notification) => (
-                        <NotificationItem
-                            key={notification.id}
-                            notification={notification}
-                            onViewDetail={(id) => console.log("Ver detalle", id)}
-                        />
-                    ))
-
+                    <div className="flex flex-col gap-1">
+                        {notifications.map((notif) => (
+                            <NotificationItem
+                                key={notif.id_notificacion}
+                                notification={notif}
+                                onMarkAsRead={handleMarkAsRead}
+                            />
+                        ))}
+                    </div>
                 )}
-
             </main>
 
-            {/* ── BARRA INFERIOR ── */}
-            <nav className="
-                fixed bottom-0 left-0 right-0
-                h-20 bg-[var(--primary)]
-                flex justify-around items-center
-                rounded-t-2xl shadow-lg z-50
-            ">
-                <NavItem
-                    label="Notificaciones"
-                    icon={<HiOutlineBell size={28} />}
-                    active={true}
-                    badge={notifications.length}
-                    onClick={() => navigate(PATHS.DRIVER.NOTIFICATIONS)}
-                />
-                <NavItem
-                    label="Inicio"
-                    icon={<HiOutlineHome size={28} />}
-                    active={false}
-                    onClick={() => navigate(PATHS.DRIVER.HOME)}
-                />
-                <NavItem
-                    label="Historial"
-                    icon={<HiOutlineTruck size={28} />}
-                    active={false}
-                    onClick={() => navigate(PATHS.DRIVER.HISTORY)}
-                />
-                <NavItem
-                    label="Perfil"
-                    icon={<HiOutlineUser size={28} />}
-                    active={false}
-                    onClick={() => navigate(PATHS.DRIVER.PROFILE)}
-                />
-            </nav>
+            {/* ── BOTTOM NAVIGATION ── */}
+            <DriverBottomNav active="notifications" />
 
         </div>
-    );
-}
-
-interface NavItemProps {
-    icon: React.ReactNode;
-    label: string;
-    active: boolean;
-    onClick: () => void;
-    badge?: number;
-}
-
-function NavItem({ icon, label, active, onClick, badge }: NavItemProps) {
-    return (
-        <button
-            onClick={onClick}
-            className="flex flex-col items-center justify-center h-full flex-1 transition-all"
-        >
-            <div
-                className={`
-                    flex flex-col items-center justify-center w-full h-full transition-all
-                    ${active ? "bg-[var(--secondary)] rounded-t-xl" : ""}
-                `}
-            >
-                <div className="relative text-white">
-                    {icon}
-
-                    {!!badge && badge > 0 && (
-                        <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
-                            {badge}
-                        </span>
-                    )}
-                </div>
-
-                <span className="text-white text-xs mt-1">{label}</span>
-            </div>
-        </button>
     );
 }

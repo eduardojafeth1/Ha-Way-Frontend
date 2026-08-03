@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PATHS } from "../../../routes/path";
 import { PREPARATION_TIME, OPENING_HOUR, CLOSING_HOUR } from "../../../constants/schedule";
@@ -9,273 +9,273 @@ import DeliverySchedule from "../components/CreateOrder/DeliverySchedule";
 import TimeSelector from "../components/CreateOrder/TimeSelector";
 import SavedAddressesModal from "../components/CreateOrder/Savedaddressesmodal";
 import MapPickerModal from "../components/CreateOrder/Mappickermodal";
+import AddAddressDetailsModal from "../components/CreateOrder/AddAddressDetailsModal";
 import PageHeader from "../components/PageHeader";
 import type { LocationData, SavedAddress } from "../components/CreateOrder/location.types";
+import { getJson, postJson } from "../../../services/api";
 
 type DeliveryOption = "now" | "today" | "tomorrow";
-
-// Forma final del pedido que se mandará al backend
-
-interface OrderPayload {
-  quantity: number;
-  location: LocationData | null;
-  schedule: DeliveryOption;
-  time: string | null; // null si schedule === "now"
-}
+type UnidadMedida = "BARRILES" | "CISTERNA" | "GALONES";
 
 export default function CreateOrder() {
-
   const navigate = useNavigate();
 
-  /*
-  ===========================================================
-  BACKEND
-
-  Aquí obtendremos:
-
-  - Direcciones guardadas del usuario
-  - Cantidad disponible
-  - Ubicación actual / dirección por defecto
-
-  const user = await userService.getProfile();
-
-  const availableBarrels =
-      await providerService.getAvailableBarrels();
-
-  const savedAddresses: SavedAddress[] =
-      await userService.getSavedAddresses();
-
-  const defaultAddress =
-      savedAddresses.find((a) => a.id === user.defaultAddressId) ?? null;
-
-  ===========================================================
-  */
-
-  // Direcciones guardadas (mock mientras no hay backend)
-
-  const [savedAddresses] = useState<SavedAddress[]>([
-    {
-      id: 1,
-      label: "Casa",
-      address: "Colonia Palmira, Tegucigalpa",
-      lat: null,
-      lng: null,
-    },
-    {
-      id: 2,
-      label: "Oficina",
-      address: "Boulevard Morazán, Tegucigalpa",
-      lat: null,
-      lng: null,
-    },
-  ]);
-
-  const [selectedAddressId, setSelectedAddressId] = useState<number | null>(1);
-
-  const [location, setLocation] = useState<LocationData | null>(
-    savedAddresses[0] ?? null
-  );
+  // Direcciones guardadas
+  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
+  const [location, setLocation] = useState<LocationData | null>(null);
 
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [tempLocation, setTempLocation] = useState<LocationData | null>(null);
 
+  // Cargar direcciones al inicio
+  useEffect(() => {
+    const fetchAddresses = async () => {
+      try {
+        const data = await getJson("/cliente/direcciones");
+        setSavedAddresses(data);
+        // Si hay direcciones y no se ha seleccionado ninguna, usar la principal (la primera)
+        if (data.length > 0 && !location) {
+          setSelectedAddressId(data[0].id);
+          setLocation({
+            address: data[0].address,
+            lat: data[0].lat,
+            lng: data[0].lng,
+          });
+        }
+      } catch (err) {
+        console.error("Error al cargar direcciones:", err);
+      }
+    };
+    fetchAddresses();
+  }, []);
+
+  // Estados de pedido
+  const [unidadMedida, setUnidadMedida] = useState<UnidadMedida>("BARRILES");
   const [quantity, setQuantity] = useState(20);
-
+  const [descripcion, setDescripcion] = useState("");
   const [schedule, setSchedule] = useState<DeliveryOption>("today");
-
   const [time, setTime] = useState<string | null>(null);
 
+  // Estados de control
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  // Ajustar cantidad por defecto según unidad de medida seleccionada
+  useEffect(() => {
+    if (unidadMedida === "CISTERNA") {
+      setQuantity(1);
+    } else if (unidadMedida === "GALONES") {
+      setQuantity(500);
+    } else {
+      setQuantity(20); // BARRILES
+    }
+  }, [unidadMedida]);
+
+  // Límite disponible según unidad
+  const availableQuantity = useMemo(() => {
+    if (unidadMedida === "CISTERNA") return 5;
+    if (unidadMedida === "GALONES") return 5000;
+    return 50; // BARRILES
+  }, [unidadMedida]);
 
   const isWithinWorkingHoursNow = useMemo(() => {
-
     const now = new Date();
     const nowMinutes = now.getHours() * 60 + now.getMinutes();
-
     const opening = OPENING_HOUR * 60;
     const closing = CLOSING_HOUR * 60;
-
-    // Debe quedar tiempo suficiente antes del cierre para preparar el pedido
 
     return (
       nowMinutes >= opening &&
       nowMinutes + PREPARATION_TIME <= closing
     );
-
   }, []);
 
-  // El pedido es válido si:
-  // - hay una ubicación seleccionada
-  // - si el schedule requiere hora (today/tomorrow), esa hora debe existir
-  // - si el schedule es "now", debe estar dentro de horario laboral
-
   const isValid = useMemo(() => {
-
     if (!location) return false;
-
     if (schedule === "now") {
       return isWithinWorkingHoursNow;
     }
-
     if (!time) return false;
-
     return true;
-
   }, [location, schedule, time, isWithinWorkingHoursNow]);
 
-  // Selección de una dirección guardada
-
   const handleSelectSavedAddress = (item: SavedAddress) => {
-
     setSelectedAddressId(item.id);
-
     setLocation({
       address: item.address,
       lat: item.lat,
       lng: item.lng,
     });
-
     setIsAddressModalOpen(false);
-
   };
 
-  // Confirmación de ubicación desde el mapa
-
   const handleConfirmMapLocation = (newLocation: LocationData) => {
-
-    setSelectedAddressId(null); // ya no corresponde a una dirección guardada
-    setLocation(newLocation);
+    setTempLocation(newLocation);
     setIsMapModalOpen(false);
-    setIsAddressModalOpen(false);
+    setIsDetailsModalOpen(true);
+  };
 
+  const handleSaveNewAddress = async (data: { nombre: string; referencia: string; lat: number; lng: number; direccion: string }) => {
+    // Guardar la nueva dirección en el backend
+    const res = await postJson("/cliente/direcciones", {
+      nombre: data.nombre,
+      direccion: data.direccion,
+      latitud: data.lat,
+      longitud: data.lng,
+      referencia: data.referencia,
+    });
+    
+    // Obtener la dirección devuelta por el servidor (con el ID)
+    const newAddress: SavedAddress = res.direccion;
+
+    // Actualizar la lista
+    setSavedAddresses(prev => [...prev, newAddress]);
+    
+    // Seleccionarla automáticamente
+    setSelectedAddressId(newAddress.id);
+    setLocation({
+      address: newAddress.address,
+      lat: newAddress.lat,
+      lng: newAddress.lng,
+    });
+
+    setIsDetailsModalOpen(false);
+    setTempLocation(null);
   };
 
   const handleSubmit = async () => {
-
     if (!isValid || isSubmitting) return;
 
-    const payload: OrderPayload = {
-      quantity,
-      location,
-      schedule,
-      time: schedule === "now" ? null : time,
-    };
-
-    console.log("Payload a enviar:", payload);
-
+    setError("");
     setIsSubmitting(true);
 
-    /*
-    =========================================
+    // Calcular fechas y horas programadas
+    let fechaProgramada = "";
+    let horaProgramada = "";
 
-    BACKEND
-
-    try {
-
-      const result = await orderService.searchProviders(payload);
-
-      navigate(PATHS.CLIENT.PROVIDERS, {
-        state: { orderId: result.id },
-      });
-
-    } catch (error) {
-
-      console.error(error);
-      // mostrar toast/error al usuario
-
-    } finally {
-
-      setIsSubmitting(false);
-
+    const hoy = new Date();
+    if (schedule === "now") {
+      fechaProgramada = hoy.toISOString().split("T")[0];
+      horaProgramada = hoy.toTimeString().split(" ")[0]; // HH:MM:SS
+    } else if (schedule === "today") {
+      fechaProgramada = hoy.toISOString().split("T")[0];
+      horaProgramada = time ? `${time}:00` : "";
+    } else if (schedule === "tomorrow") {
+      const mañana = new Date();
+      mañana.setDate(mañana.getDate() + 1);
+      fechaProgramada = mañana.toISOString().split("T")[0];
+      horaProgramada = time ? `${time}:00` : "";
     }
 
-    =========================================
-    */
+    const payload = {
+      id_direccion: selectedAddressId,
+      cantidad: quantity,
+      unidad_medida: unidadMedida,
+      fecha_programada: fechaProgramada,
+      hora_programada: horaProgramada,
+      descripcion: descripcion.trim() || null,
+    };
 
-    setTimeout(() => {
-
+    try {
+      const res = await postJson("/cliente/solicitudes", payload);
+      navigate(PATHS.CLIENT.WAITING(res.solicitud.id_solicitud));
+    } catch (err: any) {
+      setError(err.message || "Error al registrar la solicitud.");
+    } finally {
       setIsSubmitting(false);
-
-      navigate(PATHS.CLIENT.WAITING);
-
-    }, 1000);
-
+    }
   };
 
   return (
     <div className="min-h-screen bg-gray-100">
-
-      {/* Header */}
-
       <PageHeader
         title="Pedido"
         onClose={() => navigate(PATHS.CLIENT.HOME)}
       />
 
       <div className="px-5 py-6 space-y-8">
+        
+        {error && (
+          <div className="bg-red-50 text-red-600 text-sm font-medium p-4 rounded-2xl border border-red-200">
+            {error}
+          </div>
+        )}
+
+        {/* Unidad de Medida */}
+        <section>
+          <h2 className="font-bold text-xl mb-4">
+            Unidad de medida
+          </h2>
+          <div className="flex bg-white p-1 rounded-2xl border border-gray-200">
+            {(["BARRILES", "CISTERNA", "GALONES"] as UnidadMedida[]).map((unit) => (
+              <button
+                key={unit}
+                type="button"
+                onClick={() => setUnidadMedida(unit)}
+                className={`
+                  flex-1 py-3 text-sm font-semibold rounded-xl transition-all
+                  ${unidadMedida === unit
+                    ? "bg-[var(--primary)] text-white shadow-sm"
+                    : "text-gray-500 hover:text-gray-900"
+                  }
+                `}
+              >
+                {unit === "BARRILES" ? "Barriles" : unit === "CISTERNA" ? "Cisterna" : "Galones"}
+              </button>
+            ))}
+          </div>
+        </section>
 
         {/* Cantidad */}
-
         <section>
-
           <h2 className="font-bold text-xl mb-4">
-            Cantidad de barriles
+            Cantidad de {unidadMedida === "BARRILES" ? "barriles" : unidadMedida === "CISTERNA" ? "cisternas" : "galones"}
           </h2>
-
           <OrderQuantitySelector
-            available={50}
+            key={unidadMedida} // Re-renderizar al cambiar la unidad
+            available={availableQuantity}
             onQuantityChange={setQuantity}
           />
-
         </section>
 
         {/* Dirección */}
-
         <section>
-
           <h2 className="font-bold text-xl mb-4">
             Lugar de entrega
           </h2>
-
           <DeliveryLocationCard
             address={location?.address ?? null}
             onAddressClick={() => setIsAddressModalOpen(true)}
             onMapClick={() => setIsMapModalOpen(true)}
           />
-
         </section>
 
         {/* Programación */}
-
         <section>
-
           <h2 className="font-bold text-xl mb-4">
             Programar entrega
           </h2>
-
           <DeliverySchedule
             onScheduleChange={(value) => {
               setSchedule(value);
             }}
           />
-
         </section>
 
         {/* Hora */}
-
         <section>
-
           <h2 className="font-bold text-xl mb-4">
             Hora de entrega
           </h2>
-
           <TimeSelector
             schedule={schedule}
             onTimeChange={(value) => {
               setTime(value);
             }}
           />
-
         </section>
 
         {schedule === "now" && !isWithinWorkingHoursNow && (
@@ -285,10 +285,23 @@ export default function CreateOrder() {
           </p>
         )}
 
-        {/* Botón */}
+        {/* Notas adicionales */}
+        <section>
+          <h2 className="font-bold text-xl mb-4">
+            Notas adicionales
+          </h2>
+          <textarea
+            value={descripcion}
+            onChange={(e) => setDescripcion(e.target.value)}
+            placeholder="Especificaciones de la entrega (ej. timbre, portón negro, cisterna en el patio trasero)"
+            className="w-full bg-white border border-gray-200 rounded-2xl p-4 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-[var(--primary)] h-24 resize-none"
+          />
+        </section>
 
+        {/* Botón */}
         <button
           disabled={!isValid || isSubmitting}
+          onClick={handleSubmit}
           className={`
             w-full
             py-4
@@ -296,21 +309,26 @@ export default function CreateOrder() {
             font-bold
             text-lg
             transition
+            flex items-center justify-center gap-2
             ${
               !isValid || isSubmitting
                 ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                : "bg-[var(--primary)] text-white hover:opacity-90"
+                : "bg-[var(--primary)] text-white hover:opacity-90 active:scale-95"
             }
           `}
-          onClick={handleSubmit}
         >
-          {isSubmitting ? "Buscando..." : "Buscar proveedores"}
+          {isSubmitting ? (
+            <>
+              <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+              Buscando proveedores...
+            </>
+          ) : (
+            "Buscar proveedores"
+          )}
         </button>
-
       </div>
 
       {/* Modales */}
-
       <SavedAddressesModal
         isOpen={isAddressModalOpen}
         addresses={savedAddresses}
@@ -330,6 +348,12 @@ export default function CreateOrder() {
         onClose={() => setIsMapModalOpen(false)}
       />
 
+      <AddAddressDetailsModal
+        isOpen={isDetailsModalOpen}
+        location={tempLocation}
+        onSave={handleSaveNewAddress}
+        onClose={() => setIsDetailsModalOpen(false)}
+      />
     </div>
   );
 }

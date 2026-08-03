@@ -1,99 +1,100 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PATHS } from "../../../routes/path";
 import { FaDollarSign, FaTruck, FaTint } from "react-icons/fa";
-import {
-    HiOutlineBell,
-    HiOutlineHome,
-    HiOutlineTruck,
-    HiOutlineUser,
-} from "react-icons/hi2";
+import { getJson } from "../../../services/api";
+import DriverBottomNav from "../components/DriverBottomNav";
 
-// ─── Tipos ────────────────────────────────────────────────────────────────────
-
-interface PreviousOrder {
-    id: number;
-    cliente: string;
+interface OrderData {
+    id_pedido: number;
+    cliente_nombre: string;
+    cliente_apellido: string;
     direccion: string;
-    fecha: string;
-    hora: string;
-    total: number;
-    litros: number;
-    status: "Completado" | "Cancelado" | "En camino";
+    fecha_inicio: string;
+    pago_total: string | number;
+    estado: string;
+    cantidad: string | number;
 }
 
-// ─── Datos temporales ─────────────────────────────────────────────────────────
-// Reemplazar con llamada al backend cuando esté listo:
-// const pedidos = await orderService.getDriverHistory();
+function StatusBadge({ status }: { status: string }) {
+    let style = "bg-gray-400 text-white";
+    if (status === "ENTREGADO") style = "bg-green-500 text-white";
+    if (status === "CANCELADO") style = "bg-red-500 text-white";
+    if (status === "EN_CAMINO" || status === "PREPARANDO" || status === "LLEGO") style = "bg-yellow-400 text-white";
+    if (status === "PENDIENTE") style = "bg-blue-400 text-white";
 
-const PEDIDOS_MOCK: PreviousOrder[] = [
-    {
-        id: 1048,
-        cliente: "Carlos Perez",
-        direccion: "Res. Las Hadas, 1.5 km",
-        fecha: "20/05/2026",
-        hora: "8:15 a.m.",
-        total: 750.0,
-        litros: 1000,
-        status: "Completado",
-    },
-    {
-        id: 1049,
-        cliente: "Carlos Perez",
-        direccion: "Res. Las Hadas, 1.5 km",
-        fecha: "20/05/2026",
-        hora: "8:15 a.m.",
-        total: 750.0,
-        litros: 1000,
-        status: "Completado",
-    },
-];
-
-// ─── Badge de estado ──────────────────────────────────────────────────────────
-
-function StatusBadge({ status }: { status: PreviousOrder["status"] }) {
-    const styles: Record<PreviousOrder["status"], string> = {
-        Completado: "bg-green-500 text-white",
-        Cancelado: "bg-red-500 text-white",
-        "En camino": "bg-yellow-400 text-white",
-    };
     return (
-        <span className={`text-xs font-semibold px-2 py-0.5 rounded-md ${styles[status]}`}>
+        <span className={`text-xs font-semibold px-2 py-0.5 rounded-md ${style}`}>
             {status}
         </span>
     );
 }
 
-// ─── Componente principal ─────────────────────────────────────────────────────
+function OrderCard({ order, onClick }: { order: OrderData, onClick: () => void }) {
+    return (
+        <div
+            onClick={onClick}
+            className="border border-gray-100 rounded-xl p-3 shadow-sm bg-white cursor-pointer hover:shadow-md transition-shadow"
+        >
+            <div className="flex justify-between items-start mb-1">
+                <span className="font-semibold text-gray-800 text-sm">
+                    Pedido N°{order.id_pedido}
+                </span>
+                <StatusBadge status={order.estado} />
+            </div>
+            <div className="flex justify-between items-end">
+                <div>
+                    <p className="text-xs text-gray-500">{order.cliente_nombre} {order.cliente_apellido}</p>
+                    <p className="text-xs text-gray-500 line-clamp-1 max-w-[150px]">{order.direccion}</p>
+                </div>
+                <div className="text-right">
+                    <p className="text-xs text-gray-400">{new Date(order.fecha_inicio).toLocaleDateString()}</p>
+                    <p className="text-xs text-gray-400">{new Date(order.fecha_inicio).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                    <p className="text-sm font-bold text-gray-800 mt-0.5">
+                        L {Number(order.pago_total || 0).toFixed(2)}
+                    </p>
+                </div>
+            </div>
+        </div>
+    );
+}
 
 export default function DriverHistory() {
     const navigate = useNavigate();
+    const driverName = localStorage.getItem("userName") || "Conductor";
 
-    /*
-    ==================================================
-    BACKEND
-    ==================================================
-    Reemplazar con:
-    const driver = await authService.getDriverProfile();
-    const pedidos = await orderService.getDriverHistory();
-    ==================================================
-    */
+    const [pedidos, setPedidos] = useState<OrderData[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    const driverName = "Luis Rodriguez";
-
-    const [pedidos] = useState<PreviousOrder[]>(PEDIDOS_MOCK);
+    useEffect(() => {
+        const fetchPedidos = async () => {
+            try {
+                const data = await getJson("/conductor/pedidos");
+                setPedidos(data);
+            } catch (err) {
+                console.error("Error cargando pedidos", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchPedidos();
+    }, []);
 
     // Métricas calculadas desde los pedidos
-    // Cuando haya backend, traer directo del servidor
+    const hoyStr = new Date().toLocaleDateString();
+
     const ingresosHoy = pedidos
-        .filter((p) => p.status === "Completado")
-        .reduce((acc, p) => acc + p.total, 0);
+        .filter((p) => p.estado === "ENTREGADO" && new Date(p.fecha_inicio).toLocaleDateString() === hoyStr)
+        .reduce((acc, p) => acc + Number(p.pago_total || 0), 0);
 
     const totalPedidos = pedidos.length;
 
     const totalLitros = pedidos
-        .filter((p) => p.status === "Completado")
-        .reduce((acc, p) => acc + p.litros, 0);
+        .filter((p) => p.estado === "ENTREGADO")
+        .reduce((acc, p) => acc + Number(p.cantidad || 0), 0);
+
+    const activeOrders = pedidos.filter(p => p.estado !== "ENTREGADO" && p.estado !== "CANCELADO");
+    const pastOrders = pedidos.filter(p => p.estado === "ENTREGADO" || p.estado === "CANCELADO");
 
     return (
         <div className="min-h-screen bg-gray-100 pb-28">
@@ -102,12 +103,8 @@ export default function DriverHistory() {
             <header className="relative w-full bg-[var(--secondary)] rounded-b-[40px] px-6 pt-8 pb-10 text-white">
                 <button
                     onClick={() => {
-                        /*
-                        BACKEND
-                        await authService.logout();
                         localStorage.removeItem("token");
-                        navigate(PATHS.HOME);
-                        */
+                        localStorage.removeItem("userRole");
                         navigate(PATHS.HOME);
                     }}
                     className="absolute top-8 right-6 text-2xl hover:scale-110 transition-transform"
@@ -128,71 +125,8 @@ export default function DriverHistory() {
 
             <main className="px-5 mt-6 space-y-5">
 
-                {/* ── PEDIDOS ANTERIORES ── */}
-                <div className="bg-white rounded-xl shadow-md p-4">
-
-                    <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                strokeWidth={1.8} stroke="currentColor"
-                                className="w-6 h-6 text-[var(--secondary)]">
-                                <path strokeLinecap="round" strokeLinejoin="round"
-                                    d="M12 6v6h4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <h2 className="text-base font-semibold text-gray-800">
-                                Pedidos Anteriores
-                            </h2>
-                        </div>
-                        <button
-                            onClick={() => console.log("Ver todos")}
-                            className="text-sm text-[var(--secondary)] font-medium"
-                        >
-                            Ver todos
-                        </button>
-                    </div>
-
-                    {pedidos.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-10">
-                            <p className="text-gray-400 text-lg font-semibold">
-                                No tienes pedidos aún
-                            </p>
-                            <p className="text-gray-400">¡Acepta tu primer pedido!</p>
-                        </div>
-                    ) : (
-                        <div className="space-y-3">
-                            {pedidos.map((pedido) => (
-                                <div
-                                    key={pedido.id}
-                                    className="border border-gray-100 rounded-xl p-3 shadow-sm"
-                                >
-                                    <div className="flex justify-between items-start mb-1">
-                                        <span className="font-semibold text-gray-800 text-sm">
-                                            Pedido N°{pedido.id}
-                                        </span>
-                                        <StatusBadge status={pedido.status} />
-                                    </div>
-                                    <div className="flex justify-between items-end">
-                                        <div>
-                                            <p className="text-xs text-gray-500">{pedido.cliente}</p>
-                                            <p className="text-xs text-gray-500">{pedido.direccion}</p>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="text-xs text-gray-400">{pedido.fecha}</p>
-                                            <p className="text-xs text-gray-400">{pedido.hora}</p>
-                                            <p className="text-sm font-bold text-gray-800 mt-0.5">
-                                                L {pedido.total.toFixed(2)}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-
                 {/* ── TARJETAS DE MÉTRICAS ── */}
                 <div className="grid grid-cols-3 gap-3">
-
                     {/* Ingresos Hoy */}
                     <div className="bg-white rounded-2xl shadow-sm p-3 flex flex-col items-center gap-2">
                         <div className="w-12 h-12 rounded-2xl bg-green-500 flex items-center justify-center">
@@ -202,7 +136,7 @@ export default function DriverHistory() {
                             Ingresos Hoy
                         </p>
                         <p className="text-sm font-bold text-[var(--secondary)]">
-                            ${ingresosHoy}
+                            L{ingresosHoy.toFixed(2)}
                         </p>
                     </div>
 
@@ -231,72 +165,80 @@ export default function DriverHistory() {
                             {totalLitros}
                         </p>
                     </div>
-
                 </div>
+
+                {loading ? (
+                    <div className="flex justify-center py-10">
+                        <span className="w-8 h-8 border-4 border-[var(--primary)] border-t-transparent rounded-full animate-spin"></span>
+                    </div>
+                ) : (
+                    <>
+                        {/* ── PEDIDOS ACTIVOS ── */}
+                        {activeOrders.length > 0 && (
+                            <div className="bg-white rounded-xl shadow-md p-4">
+                                <div className="flex items-center gap-1 mb-3">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                        strokeWidth={1.8} stroke="currentColor"
+                                        className="w-6 h-6 text-[var(--primary)]">
+                                        <path strokeLinecap="round" strokeLinejoin="round"
+                                            d="M12 6v6h4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <h2 className="text-base font-semibold text-gray-800">
+                                        Pedidos Activos
+                                    </h2>
+                                </div>
+                                <div className="space-y-3">
+                                    {activeOrders.map((pedido) => (
+                                        <OrderCard 
+                                            key={pedido.id_pedido} 
+                                            order={pedido} 
+                                            onClick={() => navigate(PATHS.DRIVER.TRACKING(pedido.id_pedido))}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ── PEDIDOS ANTERIORES ── */}
+                        <div className="bg-white rounded-xl shadow-md p-4">
+                            <div className="flex items-center gap-1 mb-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                    strokeWidth={1.8} stroke="currentColor"
+                                    className="w-6 h-6 text-gray-500">
+                                    <path strokeLinecap="round" strokeLinejoin="round"
+                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                <h2 className="text-base font-semibold text-gray-800">
+                                    Pedidos Anteriores
+                                </h2>
+                            </div>
+
+                            {pastOrders.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center py-6">
+                                    <p className="text-gray-400 text-sm font-semibold">
+                                        Aún no tienes pedidos finalizados
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="space-y-3">
+                                    {pastOrders.map((pedido) => (
+                                        <OrderCard 
+                                            key={pedido.id_pedido} 
+                                            order={pedido} 
+                                            onClick={() => navigate(PATHS.DRIVER.TRACKING(pedido.id_pedido))}
+                                        />
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </>
+                )}
 
             </main>
 
             {/* ── BOTTOM NAVIGATION ── */}
-            <nav className="
-        fixed bottom-0 left-0 right-0
-        h-20 bg-[var(--primary)]
-        flex justify-around items-center
-        rounded-t-2xl shadow-lg z-50
-      ">
-                <NavItem
-                    label="Notificaciones"
-                    icon={<HiOutlineBell size={28} />}
-                    active={false}
-                    onClick={() => navigate(PATHS.DRIVER.NOTIFICATIONS)}
-                />
-                <NavItem
-                    label="Inicio"
-                    icon={<HiOutlineHome size={28} />}
-                    active={false}
-                    onClick={() => navigate(PATHS.DRIVER.HOME)}
-                />
-                <NavItem
-                    label="Historial"
-                    icon={<HiOutlineTruck size={28} />}
-                    active={true}
-                    onClick={() => { }}
-                />
-                <NavItem
-                    label="Perfil"
-                    icon={<HiOutlineUser size={28} />}
-                    active={false}
-                    onClick={() => navigate(PATHS.DRIVER.PROFILE)}
-                />
-            </nav>
+            <DriverBottomNav active="history" />
 
         </div>
-    );
-}
-
-// ─── NavItem ──────────────────────────────────────────────────────────────────
-
-interface NavItemProps {
-    icon: React.ReactNode;
-    label: string;
-    active: boolean;
-    onClick: () => void;
-}
-
-function NavItem({ icon, label, active, onClick }: NavItemProps) {
-    return (
-        <button
-            onClick={onClick}
-            className="flex flex-col items-center justify-center h-full flex-1 transition-all"
-        >
-            <div
-                className={`
-          flex flex-col items-center justify-center w-full h-full transition-all
-          ${active ? "bg-[var(--secondary)] rounded-t-xl" : ""}
-        `}
-            >
-                <div className="text-white">{icon}</div>
-                <span className="text-white text-xs mt-1">{label}</span>
-            </div>
-        </button>
     );
 }

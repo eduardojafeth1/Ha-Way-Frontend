@@ -7,7 +7,7 @@ import ProfileAvatar from "../../conductor/components/profile/ProfileAvatar";
 import EditProfileButton from "../../conductor/components/profile/EditProfileButton";
 import ClientProfileForm from "../components/profile/ClientProfileForm";
 import SavedAddressSelect from "../../conductor/components/profile/SavedAddressSelect";
-import SavedCardsSection from "../../conductor/components/profile/SavedCardsSection";
+import ClientSavedCardsSection from "../components/profile/ClientSavedCardsSection";
 import SystemSettingsList from "../../conductor/components/profile/SystemSettingsList";
 import LogoutButton from "../../conductor/components/profile/LogoutButton";
 import BottomNavigation from "../components/Home/BottomNavigation";
@@ -25,27 +25,20 @@ export default function Profile() {
   // Estados específicos del cliente
   const [address, setAddress] = useState("");
 
+  // Estado de edición
+  const [isEditing, setIsEditing] = useState(false);
+
   // Estados de control
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Direcciones temporales
-  const [addresses] = useState([
-    { id: 1, label: "Casa" },
-    { id: 2, label: "Trabajo" },
-  ]);
+  // Direcciones reales
+  const [addresses, setAddresses] = useState<{ id: number; label: string; address: string; }[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
 
-  const [selectedAddressId, setSelectedAddressId] = useState(1);
 
-  // Tarjetas temporales
-  const [cards] = useState([
-    { id: 1, brand: "Visa", last4: "4242" },
-    { id: 2, brand: "Mastercard", last4: "8888" },
-  ]);
-
-  const [selectedCardId, setSelectedCardId] = useState(2);
 
   // Cargar perfil al montar
   useEffect(() => {
@@ -57,6 +50,14 @@ export default function Profile() {
         setPhone(data.telefono || "");
         setPhotoUrl(data.foto || null);
         setAddress(data.direccion_predeterminada || "");
+
+        // Cargar lista de direcciones guardadas
+        const dirs = await getJson("/cliente/direcciones");
+        setAddresses(dirs);
+        if (dirs.length > 0) {
+          const principal = dirs.find((d: any) => d.principal) || dirs[0];
+          setSelectedAddressId(principal.id);
+        }
       } catch (err: any) {
         setError("Error al cargar la información del perfil.");
       } finally {
@@ -85,6 +86,7 @@ export default function Profile() {
         direccion_predeterminada: address,
       });
       setSuccess("Perfil actualizado exitosamente.");
+      setIsEditing(false); // Salir del modo de edición al guardar
     } catch (err: any) {
       setError(err.message || "Error al actualizar el perfil.");
     } finally {
@@ -135,15 +137,36 @@ export default function Profile() {
               onChangeName={setName}
               onChangePhone={setPhone}
               onChangeAddress={setAddress}
+              isEditing={isEditing}
             />
 
-            <EditProfileButton
-              onClick={handleSave}
-            />
-
-            {saving && (
-              <div className="text-center text-sm text-gray-500 animate-pulse">
-                Guardando cambios...
+            {!isEditing ? (
+              <EditProfileButton
+                onClick={() => setIsEditing(true)}
+              />
+            ) : (
+              <div className="flex gap-3 mt-4">
+                <button
+                  onClick={() => setIsEditing(false)}
+                  disabled={saving}
+                  className="w-1/3 bg-gray-200 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-300 transition"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="w-2/3 bg-[var(--primary)] text-white py-3 rounded-xl font-medium shadow-sm hover:opacity-90 transition flex items-center justify-center gap-2"
+                >
+                  {saving ? (
+                    <>
+                      <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                      Guardando...
+                    </>
+                  ) : (
+                    "Enviar"
+                  )}
+                </button>
               </div>
             )}
           </>
@@ -151,17 +174,11 @@ export default function Profile() {
 
         <SavedAddressSelect
           addresses={addresses}
-          selectedId={selectedAddressId}
+          selectedId={selectedAddressId || 0}
           onChange={setSelectedAddressId}
         />
 
-        <SavedCardsSection
-          cards={cards}
-          selectedCardId={selectedCardId}
-          onSelectCard={setSelectedCardId}
-          onEditCard={(id: number) => console.log("Editar tarjeta", id)}
-          onAddCard={() => console.log("Añadir nueva tarjeta")}
-        />
+        <ClientSavedCardsSection />
 
         <SystemSettingsList
           onSecurityClick={() => console.log("Seguridad y permisos")}
@@ -169,23 +186,21 @@ export default function Profile() {
         />
 
         <LogoutButton
-          onClick={() => {
+          onLogout={() => {
             localStorage.removeItem("token");
             localStorage.removeItem("userRole");
             navigate(PATHS.HOME);
           }}
         />
-
       </main>
 
       <BottomNavigation
         active="profile"
         onHomeClick={() => navigate(PATHS.CLIENT.HOME)}
-        onHistoryClick={() => console.log("Ir a historial")}
-        onNotificationsClick={() => console.log("Ir a notificaciones")}
-        onProfileClick={() => {}}
+        onHistoryClick={() => navigate(PATHS.CLIENT.HISTORY)}
+        onNotificationsClick={() => navigate(PATHS.CLIENT.NOTIFICATIONS)}
+        onProfileClick={() => navigate(PATHS.CLIENT.PROFILE)}
       />
-
     </div>
   );
 }

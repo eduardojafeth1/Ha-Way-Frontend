@@ -1,5 +1,6 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { PATHS } from "./path";
+import GlobalNotification from "../modules/core/components/GlobalNotification";
 
 interface ProtectedRouteProps {
   allowedRoles: string[];
@@ -20,5 +21,10 @@ export default function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
   }
 
   // Permitir el acceso renderizando las sub-rutas
-  return <Outlet />;
+  return (
+    <>
+      <GlobalNotification token={token} role={userRole} />
+      <Outlet />
+    </>
+  );
 }

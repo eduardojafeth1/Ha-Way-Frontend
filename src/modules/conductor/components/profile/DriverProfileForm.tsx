@@ -5,6 +5,7 @@ interface DriverProfileFormProps {
   identity: string;
   license: string;
   expiryDate: string;
+  isEditing?: boolean;
   onChangeName: (value: string) => void;
   onChangePhone: (value: string) => void;
   onChangeIdentity: (value: string) => void;
@@ -19,6 +20,7 @@ export default function DriverProfileForm({
   identity,
   license,
   expiryDate,
+  isEditing = false,
   onChangeName,
   onChangePhone,
   onChangeIdentity,
@@ -37,19 +39,18 @@ export default function DriverProfileForm({
           type="text"
           value={name}
           onChange={(e) => onChangeName(e.target.value)}
+          readOnly={!isEditing}
           placeholder="Ej. Luis Rodriguez"
-          className="
+          className={`
             w-full
-            bg-gray-100
             rounded-xl
             px-4
             py-3
-            text-gray-800
-            placeholder-gray-400
             outline-none
-            focus:ring-2
-            focus:ring-[var(--primary)]
-          "
+            ${isEditing 
+              ? "bg-gray-100 text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-[var(--primary)]" 
+              : "bg-gray-50 text-gray-600 cursor-not-allowed"}
+          `}
         />
       </div>
 
@@ -84,19 +85,18 @@ export default function DriverProfileForm({
           type="tel"
           value={phone}
           onChange={(e) => onChangePhone(e.target.value)}
+          readOnly={!isEditing}
           placeholder="+504 9999-0000"
-          className="
+          className={`
             w-full
-            bg-gray-100
             rounded-xl
             px-4
             py-3
-            text-gray-800
-            placeholder-gray-400
             outline-none
-            focus:ring-2
-            focus:ring-[var(--primary)]
-          "
+            ${isEditing 
+              ? "bg-gray-100 text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-[var(--primary)]" 
+              : "bg-gray-50 text-gray-600 cursor-not-allowed"}
+          `}
         />
       </div>
 
@@ -109,19 +109,18 @@ export default function DriverProfileForm({
           type="text"
           value={identity}
           onChange={(e) => onChangeIdentity(e.target.value)}
+          readOnly={!isEditing}
           placeholder="0801-1990-12345"
-          className="
+          className={`
             w-full
-            bg-gray-100
             rounded-xl
             px-4
             py-3
-            text-gray-800
-            placeholder-gray-400
             outline-none
-            focus:ring-2
-            focus:ring-[var(--primary)]
-          "
+            ${isEditing 
+              ? "bg-gray-100 text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-[var(--primary)]" 
+              : "bg-gray-50 text-gray-600 cursor-not-allowed"}
+          `}
         />
       </div>
 
@@ -134,19 +133,18 @@ export default function DriverProfileForm({
           type="text"
           value={license}
           onChange={(e) => onChangeLicense(e.target.value)}
+          readOnly={!isEditing}
           placeholder="HN-12345"
-          className="
+          className={`
             w-full
-            bg-gray-100
             rounded-xl
             px-4
             py-3
-            text-gray-800
-            placeholder-gray-400
             outline-none
-            focus:ring-2
-            focus:ring-[var(--primary)]
-          "
+            ${isEditing 
+              ? "bg-gray-100 text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-[var(--primary)]" 
+              : "bg-gray-50 text-gray-600 cursor-not-allowed"}
+          `}
         />
       </div>
 
@@ -159,17 +157,17 @@ export default function DriverProfileForm({
           type="date"
           value={expiryDate}
           onChange={(e) => onChangeExpiryDate(e.target.value)}
-          className="
+          readOnly={!isEditing}
+          className={`
             w-full
-            bg-gray-100
             rounded-xl
             px-4
             py-3
-            text-gray-800
             outline-none
-            focus:ring-2
-            focus:ring-[var(--primary)]
-          "
+            ${isEditing 
+              ? "bg-gray-100 text-gray-800 focus:ring-2 focus:ring-[var(--primary)]" 
+              : "bg-gray-50 text-gray-600 cursor-not-allowed"}
+          `}
         />
       </div>
 

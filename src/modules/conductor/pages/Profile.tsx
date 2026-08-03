@@ -1,20 +1,15 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PATHS } from "../../../routes/path";
-import {
-    HiOutlineBell,
-    HiOutlineHome,
-    HiOutlineTruck,
-    HiOutlineUser,
-} from "react-icons/hi2";
+import DriverBottomNav from "../components/DriverBottomNav";
 
-import ProfileHeader from "../components/profile/ProfileHeader";
-import ProfileAvatar from "../components/profile/ProfileAvatar";
-import EditProfileButton from "../components/profile/EditProfileButton";
+import {ProfileHeaderConductor as ProfileHeader} from "../components/profile/ProfileHeader";
+import {ProfileAvatarConductor as ProfileAvatar } from "../components/profile/ProfileAvatar";
+import { EditProfileButtonConductor as EditProfileButton} from "../components/profile/EditProfileButton";
 import DriverProfileForm from "../components/profile/DriverProfileForm";
 import SavedAddressSelect from "../components/profile/SavedAddressSelect";
 import SavedCardsSection from "../components/profile/SavedCardsSection";
-import SystemSettingsList from "../components/profile/SystemSettingsList";
+import {SystemSettingsListConductor as SystemSettingsList} from "../components/profile/SystemSettingsList";
 import LogoutButton from "../components/profile/LogoutButton";
 import { getJson, putJson } from "../../../services/api";
 
@@ -37,6 +32,10 @@ export default function Profile() {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
+    const [isEditing, setIsEditing] = useState(false);
+
+    // Estado para restaurar datos en caso de cancelar
+    const [originalData, setOriginalData] = useState<any>({});
 
     // Direcciones temporales
     const [addresses] = useState([
@@ -68,6 +67,17 @@ export default function Profile() {
                 setIdentity(data.identidad || "");
                 setLicense(data.numero_licencia || "");
                 setExpiryDate(data.fecha_vencimiento ? data.fecha_vencimiento.split("T")[0] : "");
+
+                // Guardar copia original para restaurar al cancelar
+                setOriginalData({
+                    name: `${data.nombre || ""} ${data.apellido || ""}`.trim(),
+                    email: data.correo || "",
+                    phone: data.telefono || "",
+                    photoUrl: data.foto || null,
+                    identity: data.identidad || "",
+                    license: data.numero_licencia || "",
+                    expiryDate: data.fecha_vencimiento ? data.fecha_vencimiento.split("T")[0] : "",
+                });
             } catch (err: any) {
                 setError("Error al cargar la información del perfil.");
             } finally {
@@ -98,11 +108,36 @@ export default function Profile() {
                 fecha_vencimiento: expiryDate,
             });
             setSuccess("Perfil actualizado exitosamente.");
+            setIsEditing(false);
+            
+            // Actualizar originalData con lo guardado
+            setOriginalData({
+                name,
+                email,
+                phone,
+                photoUrl,
+                identity,
+                license,
+                expiryDate
+            });
         } catch (err: any) {
             setError(err.message || "Error al actualizar el perfil.");
         } finally {
             setSaving(false);
         }
+    };
+
+    const handleCancel = () => {
+        setIsEditing(false);
+        setError("");
+        setSuccess("");
+        // Restaurar datos originales
+        setName(originalData.name);
+        setEmail(originalData.email);
+        setPhone(originalData.phone);
+        setIdentity(originalData.identity);
+        setLicense(originalData.license);
+        setExpiryDate(originalData.expiryDate);
     };
 
     return (
@@ -147,6 +182,7 @@ export default function Profile() {
                             identity={identity}
                             license={license}
                             expiryDate={expiryDate}
+                            isEditing={isEditing}
                             onChangeName={setName}
                             onChangePhone={setPhone}
                             onChangeIdentity={setIdentity}
@@ -155,14 +191,12 @@ export default function Profile() {
                         />
 
                         <EditProfileButton
-                            onClick={handleSave}
+                            isEditing={isEditing}
+                            onEdit={() => setIsEditing(true)}
+                            onCancel={handleCancel}
+                            onSave={handleSave}
+                            saving={saving}
                         />
-
-                        {saving && (
-                            <div className="text-center text-sm text-gray-500 animate-pulse">
-                                Guardando cambios...
-                            </div>
-                        )}
                     </>
                 )}
 
@@ -195,65 +229,8 @@ export default function Profile() {
 
             </main>
 
-            {/* Barra inferior (mismo patrón que Home.tsx / History.tsx) */}
-            <nav className="
-                fixed bottom-0 left-0 right-0
-                h-20 bg-[var(--primary)]
-                flex justify-around items-center
-                rounded-t-2xl shadow-lg z-50
-            ">
-                <NavItem
-                    label="Notificaciones"
-                    icon={<HiOutlineBell size={28} />}
-                    active={false}
-                    onClick={() => navigate(PATHS.DRIVER.NOTIFICATIONS)}
-                />
-                <NavItem
-                    label="Inicio"
-                    icon={<HiOutlineHome size={28} />}
-                    active={false}
-                    onClick={() => navigate(PATHS.DRIVER.HOME)}
-                />
-                <NavItem
-                    label="Historial"
-                    icon={<HiOutlineTruck size={28} />}
-                    active={false}
-                    onClick={() => navigate(PATHS.DRIVER.HISTORY)}
-                />
-                <NavItem
-                    label="Perfil"
-                    icon={<HiOutlineUser size={28} />}
-                    active={true}
-                    onClick={() => navigate(PATHS.DRIVER.PROFILE)}
-                />
-            </nav>
-
+            {/* ── BOTTOM NAVIGATION ── */}
+            <DriverBottomNav active="profile" />
         </div>
-    );
-}
-
-interface NavItemProps {
-    icon: React.ReactNode;
-    label: string;
-    active: boolean;
-    onClick: () => void;
-}
-
-function NavItem({ icon, label, active, onClick }: NavItemProps) {
-    return (
-        <button
-            onClick={onClick}
-            className="flex flex-col items-center justify-center h-full flex-1 transition-all"
-        >
-            <div
-                className={`
-                    flex flex-col items-center justify-center w-full h-full transition-all
-                    ${active ? "bg-[var(--secondary)] rounded-t-xl" : ""}
-                `}
-            >
-                <div className="text-white">{icon}</div>
-                <span className="text-white text-xs mt-1">{label}</span>
-            </div>
-        </button>
     );
 }

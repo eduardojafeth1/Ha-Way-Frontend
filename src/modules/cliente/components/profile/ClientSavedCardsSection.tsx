@@ -1,0 +1,199 @@
+import { useState, useEffect } from "react";
+import { getJson, postJson, deleteJson, putJson } from "../../../../services/api";
+import { FaCreditCard, FaPlus, FaTrash, FaCheckCircle, FaStar } from "react-icons/fa";
+
+export default function ClientSavedCardsSection() {
+    const [cards, setCards] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [isAddingCard, setIsAddingCard] = useState(false);
+    
+    // New Card Form
+    const [newCard, setNewCard] = useState({
+        numero_tarjeta: "",
+        titular: "",
+        fecha_vencimiento: "",
+        cvv: "",
+        marca: "Visa"
+    });
+
+    useEffect(() => {
+        fetchCards();
+    }, []);
+
+    const fetchCards = async () => {
+        try {
+            setLoading(true);
+            const data = await getJson("/cliente/tarjetas");
+            setCards(data);
+        } catch (err) {
+            console.error("Error fetching cards:", err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleAddCard = async () => {
+        if (!newCard.numero_tarjeta || !newCard.titular) {
+            alert("Número de tarjeta y titular son obligatorios");
+            return;
+        }
+
+        try {
+            await postJson("/cliente/tarjetas", newCard);
+            setIsAddingCard(false);
+            setNewCard({ numero_tarjeta: "", titular: "", fecha_vencimiento: "", cvv: "", marca: "Visa" });
+            fetchCards();
+        } catch (err) {
+            console.error("Error adding card:", err);
+            alert("Hubo un error al guardar la tarjeta");
+        }
+    };
+
+    const handleDeleteCard = async (id: number) => {
+        if (!window.confirm("¿Seguro que deseas eliminar esta tarjeta?")) return;
+
+        try {
+            await deleteJson(`/cliente/tarjetas/${id}`);
+            fetchCards();
+        } catch (err) {
+            console.error("Error deleting card:", err);
+            alert("Hubo un error al eliminar la tarjeta");
+        }
+    };
+
+    const handleSetDefault = async (id: number) => {
+        try {
+            await putJson(`/cliente/tarjetas/${id}/principal`, {});
+            fetchCards();
+        } catch (err) {
+            console.error("Error setting default card:", err);
+            alert("Hubo un error al establecer la tarjeta principal");
+        }
+    };
+
+    return (
+        <div className="mt-6">
+            <h3 className="text-gray-800 font-bold mb-3 flex items-center gap-2">
+                <FaCreditCard className="text-[var(--primary)]" />
+                Mis Tarjetas
+            </h3>
+
+            {loading ? (
+                <div className="flex justify-center py-4">
+                    <div className="w-6 h-6 border-2 border-[var(--primary)] border-t-transparent rounded-full animate-spin"></div>
+                </div>
+            ) : (
+                <div className="space-y-3">
+                    {cards.length === 0 ? (
+                        <div className="bg-gray-100 rounded-xl p-4 text-center text-gray-500 text-sm border-2 border-dashed border-gray-200">
+                            No tienes tarjetas guardadas.
+                        </div>
+                    ) : (
+                        cards.map((card) => (
+                            <div key={card.id_tarjeta} className={`bg-white border rounded-xl p-4 flex items-center gap-3 shadow-sm transition ${card.principal ? 'border-[var(--primary)]' : 'border-gray-200'}`}>
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${card.principal ? 'bg-blue-50 text-blue-500' : 'bg-gray-50 text-gray-400'}`}>
+                                    <FaCreditCard size={18} />
+                                </div>
+                                
+                                <div className="flex-1">
+                                    <p className="font-bold text-gray-800 flex items-center gap-2">
+                                        {card.marca} **** {card.ultimos4}
+                                        {card.principal && <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Principal</span>}
+                                    </p>
+                                    <p className="text-xs text-gray-500">{card.titular}</p>
+                                </div>
+
+                                <div className="flex flex-col gap-2">
+                                    {!card.principal && (
+                                        <button onClick={() => handleSetDefault(card.id_tarjeta)} className="text-gray-400 hover:text-blue-500 transition" title="Hacer principal">
+                                            <FaStar />
+                                        </button>
+                                    )}
+                                    <button onClick={() => handleDeleteCard(card.id_tarjeta)} className="text-gray-300 hover:text-red-500 transition" title="Eliminar tarjeta">
+                                        <FaTrash />
+                                    </button>
+                                </div>
+                            </div>
+                        ))
+                    )}
+
+                    <button
+                        onClick={() => setIsAddingCard(true)}
+                        className="w-full bg-white border-2 border-dashed border-[var(--primary)] text-[var(--primary)] py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-blue-50 transition"
+                    >
+                        <FaPlus /> Añadir Tarjeta
+                    </button>
+                </div>
+            )}
+
+            {/* Modal para añadir tarjeta */}
+            {isAddingCard && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end justify-center z-50 p-4 pb-12">
+                    <div className="bg-white rounded-2xl w-full max-w-md p-6 animate-slide-up shadow-2xl">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="font-bold text-xl text-gray-800">Nueva Tarjeta</h3>
+                            <button onClick={() => setIsAddingCard(false)} className="text-gray-400 hover:text-gray-600 bg-gray-100 w-8 h-8 rounded-full flex items-center justify-center">✕</button>
+                        </div>
+                        
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-1">Número de Tarjeta</label>
+                                <input
+                                    type="text"
+                                    maxLength={16}
+                                    value={newCard.numero_tarjeta}
+                                    onChange={(e) => setNewCard({...newCard, numero_tarjeta: e.target.value})}
+                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition"
+                                    placeholder="0000 0000 0000 0000"
+                                />
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-1">Nombre del Titular</label>
+                                <input
+                                    type="text"
+                                    value={newCard.titular}
+                                    onChange={(e) => setNewCard({...newCard, titular: e.target.value})}
+                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition"
+                                    placeholder="Ej. Juan Pérez"
+                                />
+                            </div>
+
+                            <div className="flex gap-4">
+                                <div className="flex-1">
+                                    <label className="block text-sm font-bold text-gray-700 mb-1">Vencimiento</label>
+                                    <input
+                                        type="text"
+                                        maxLength={5}
+                                        value={newCard.fecha_vencimiento}
+                                        onChange={(e) => setNewCard({...newCard, fecha_vencimiento: e.target.value})}
+                                        className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition"
+                                        placeholder="MM/YY"
+                                    />
+                                </div>
+                                <div className="flex-1">
+                                    <label className="block text-sm font-bold text-gray-700 mb-1">CVV</label>
+                                    <input
+                                        type="password"
+                                        maxLength={4}
+                                        value={newCard.cvv}
+                                        onChange={(e) => setNewCard({...newCard, cvv: e.target.value})}
+                                        className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition"
+                                        placeholder="123"
+                                    />
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={handleAddCard}
+                                className="w-full bg-[var(--primary)] text-white py-4 rounded-xl font-bold mt-6 hover:bg-cyan-600 transition shadow-lg shadow-blue-500/30"
+                            >
+                                Guardar Tarjeta
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}

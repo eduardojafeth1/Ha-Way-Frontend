@@ -99,7 +99,7 @@ export default function Register() {
       // Dividir nombre del dueño en nombre y apellido
       const parts = formData.ownerName.trim().split(/\s+/);
       const nombre = parts[0] || "";
-      const apellido = parts.slice(1).join(" ") || "Pérez"; // fallback default last name if not provided
+      const apellido = parts.slice(1).join(" ");
 
       const data = new FormData();
       // Datos de usuario

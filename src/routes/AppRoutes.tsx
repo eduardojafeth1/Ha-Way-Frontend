@@ -14,9 +14,12 @@ import DriverNotifications from "../modules/conductor/pages/Notifications";
 import DriverOrderTracking from "../modules/conductor/pages/OrderTracking";
 import CreateOrder from "../modules/cliente/pages/CreateOrder";
 import WaitingDriver from "../modules/cliente/pages/WaitingDriver";
+import OrderCheckout from "../modules/cliente/pages/OrderCheckout";
+import OrderDetail from "../modules/cliente/pages/OrderDetail";
+import ClientHistory from "../modules/cliente/pages/History";
 import ProtectedRoute from "./ProtectedRoute";
 import ClientProfile from "../modules/cliente/pages/Profile";
-
+import ClientNotifications from "../modules/cliente/pages/Notifications";
 
 export default function AppRoutes() {
   return (
@@ -62,13 +65,32 @@ export default function AppRoutes() {
         />
 
         <Route
-          path={PATHS.CLIENT.WAITING}
+          path={PATHS.CLIENT.WAITING_CONFIG}
           element={<WaitingDriver />}
+        />
+
+        <Route
+          path={PATHS.CLIENT.CHECKOUT_CONFIG}
+          element={<OrderCheckout />}
+        />
+
+        <Route
+          path={PATHS.CLIENT.ORDER_DETAIL_CONFIG}
+          element={<OrderDetail />}
+        />
+
+        <Route
+          path={PATHS.CLIENT.HISTORY}
+          element={<ClientHistory />}
         />
 
         <Route
           path={PATHS.CLIENT.PROFILE}
           element={<ClientProfile />}
+        />
+        <Route
+          path={PATHS.CLIENT.NOTIFICATIONS}
+          element={<ClientNotifications />}
         />
       </Route>
 

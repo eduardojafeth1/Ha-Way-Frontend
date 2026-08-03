@@ -6,6 +6,7 @@ interface ClientProfileFormProps {
   onChangeName: (value: string) => void;
   onChangePhone: (value: string) => void;
   onChangeAddress: (value: string) => void;
+  isEditing?: boolean;
 }
 
 export default function ClientProfileForm({
@@ -16,6 +17,7 @@ export default function ClientProfileForm({
   onChangeName,
   onChangePhone,
   onChangeAddress,
+  isEditing = false,
 }: ClientProfileFormProps) {
   return (
     <div className="space-y-4">
@@ -30,18 +32,21 @@ export default function ClientProfileForm({
           value={name}
           onChange={(e) => onChangeName(e.target.value)}
           placeholder="Ej. Juan Pérez"
-          className="
+          readOnly={!isEditing}
+          className={`
             w-full
-            bg-gray-100
             rounded-xl
             px-4
             py-3
             text-gray-800
-            placeholder-gray-400
             outline-none
-            focus:ring-2
-            focus:ring-[var(--primary)]
-          "
+            transition-colors
+            ${
+              isEditing
+                ? "bg-gray-100 focus:ring-2 focus:ring-[var(--primary)] placeholder-gray-400"
+                : "bg-gray-50 border border-gray-200 cursor-not-allowed opacity-70"
+            }
+          `}
         />
       </div>
 
@@ -77,18 +82,21 @@ export default function ClientProfileForm({
           value={phone}
           onChange={(e) => onChangePhone(e.target.value)}
           placeholder="+504 9999-0000"
-          className="
+          readOnly={!isEditing}
+          className={`
             w-full
-            bg-gray-100
             rounded-xl
             px-4
             py-3
             text-gray-800
-            placeholder-gray-400
             outline-none
-            focus:ring-2
-            focus:ring-[var(--primary)]
-          "
+            transition-colors
+            ${
+              isEditing
+                ? "bg-gray-100 focus:ring-2 focus:ring-[var(--primary)] placeholder-gray-400"
+                : "bg-gray-50 border border-gray-200 cursor-not-allowed opacity-70"
+            }
+          `}
         />
       </div>
 
@@ -102,18 +110,21 @@ export default function ClientProfileForm({
           value={address}
           onChange={(e) => onChangeAddress(e.target.value)}
           placeholder="Ej. Colonia Las Minitas, casa 4"
-          className="
+          readOnly={!isEditing}
+          className={`
             w-full
-            bg-gray-100
             rounded-xl
             px-4
             py-3
             text-gray-800
-            placeholder-gray-400
             outline-none
-            focus:ring-2
-            focus:ring-[var(--primary)]
-          "
+            transition-colors
+            ${
+              isEditing
+                ? "bg-gray-100 focus:ring-2 focus:ring-[var(--primary)] placeholder-gray-400"
+                : "bg-gray-50 border border-gray-200 cursor-not-allowed opacity-70"
+            }
+          `}
         />
       </div>
 

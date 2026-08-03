@@ -1,3 +1,5 @@
+import { useState, useEffect } from "react";
+import { getJson } from "../../../../services/api";
 import {
   HiOutlineBell,
   HiOutlineHome,
@@ -21,6 +23,21 @@ export default function BottomNavigation({
   onHistoryClick,
   onProfileClick,
 }: BottomNavigationProps) {
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    const fetchUnread = async () => {
+      try {
+        const res = await getJson("/cliente/notificaciones/unread");
+        setUnreadCount(res.unread || 0);
+      } catch (err) {}
+    };
+
+    fetchUnread();
+    const intervalId = setInterval(fetchUnread, 10000); // 10 segundos
+    return () => clearInterval(intervalId);
+  }, []);
+
   return (
     <nav
       className="
@@ -43,6 +60,7 @@ export default function BottomNavigation({
         icon={<HiOutlineBell size={28} />}
         active={active === "notifications"}
         onClick={onNotificationsClick}
+        badge={unreadCount}
       />
 
       <NavItem
@@ -74,6 +92,7 @@ interface NavItemProps {
   label: string;
   active: boolean;
   onClick: () => void;
+  badge?: number;
 }
 
 function NavItem({
@@ -81,6 +100,7 @@ function NavItem({
   label,
   active,
   onClick,
+  badge = 0,
 }: NavItemProps) {
   return (
     <button
@@ -97,6 +117,7 @@ function NavItem({
     >
       <div
         className={`
+          relative
           flex
           flex-col
           items-center
@@ -111,7 +132,14 @@ function NavItem({
           }
         `}
       >
-        <div className="text-white">{icon}</div>
+        <div className="text-white relative">
+          {icon}
+          {badge > 0 && (
+            <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-[var(--primary)]">
+              {badge > 9 ? '9+' : badge}
+            </span>
+          )}
+        </div>
 
         <span className="text-white text-xs mt-1">
           {label}

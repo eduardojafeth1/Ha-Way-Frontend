@@ -6,8 +6,15 @@ export const PATHS = {
     REGISTER: "/cliente/register",
     HOME: "/cliente/home",
     CREATEORDER:"/cliente/createorder",
-    WAITING: "/cliente/esperando-conductor",
+    WAITING: (id: number | string) => `/cliente/esperando-conductor/${id}`,
+    WAITING_CONFIG: "/cliente/esperando-conductor/:id",
+    CHECKOUT: (id: number | string) => `/cliente/checkout/${id}`,
+    CHECKOUT_CONFIG: "/cliente/checkout/:id",
+    ORDER_DETAIL: (id: number | string) => `/cliente/pedido/${id}`,
+    ORDER_DETAIL_CONFIG: "/cliente/pedido/:id",
     PROFILE: "/cliente/perfil",
+    HISTORY: "/cliente/historial",
+    NOTIFICATIONS: "/cliente/notificaciones",
   },
 
   DRIVER: {

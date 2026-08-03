@@ -18,7 +18,13 @@ export default function MapPickerModal({
 }: MapPickerModalProps) {
 
   const [addressText, setAddressText] = useState(initialAddress ?? "");
-  const [coords, setCoords] = useState({
+  // mapCenter es para forzar al mapa a moverse (ej. botón "Mi ubicación")
+  const [mapCenter, setMapCenter] = useState({
+    lat: 14.0723,
+    lng: -87.1921,
+  });
+  // selectedCoords es la ubicación final donde quedó el pin al arrastrar
+  const [selectedCoords, setSelectedCoords] = useState({
     lat: 14.0723,
     lng: -87.1921,
   });
@@ -56,21 +62,28 @@ export default function MapPickerModal({
       async (position) => {
 
         const { latitude, longitude } = position.coords;
-        setCoords({ lat: latitude, lng: longitude });
+        setMapCenter({ lat: latitude, lng: longitude });
+        setSelectedCoords({ lat: latitude, lng: longitude });
 
         try {
-
-          // Reverse geocoding gratuito (OpenStreetMap Nominatim).
-          // No requiere API key, pero tiene límite de uso;
-          // para producción conviene migrar a Google Geocoding API.
-
           const response = await fetch(
             `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
           );
 
           const data = await response.json();
+          let newAddress = "Ubicación actual";
+          
+          if (data.address) {
+            const { road, suburb, neighbourhood, city, town, village } = data.address;
+            const parts = [road, suburb || neighbourhood, city || town || village].filter(Boolean);
+            if (parts.length > 0) {
+              newAddress = parts.join(", ");
+            } else if (data.display_name) {
+              newAddress = data.display_name.split(",").slice(0, 3).join(", ");
+            }
+          }
 
-          setAddressText(data.display_name ?? "Ubicación actual");
+          setAddressText(newAddress);
 
         } catch {
 
@@ -104,8 +117,8 @@ export default function MapPickerModal({
 
     onConfirm({
       address: addressText.trim(),
-      lat: coords.lat,
-      lng: coords.lng,
+      lat: selectedCoords.lat,
+      lng: selectedCoords.lng,
     });
 
   };
@@ -151,13 +164,12 @@ export default function MapPickerModal({
         <div className="mb-4">
 
           <LeafletMap
-            center={[coords.lat, coords.lng]}
+            center={[mapCenter.lat, mapCenter.lng]}
             onLocationChange={(lat, lng, address) => {
-
-              setCoords({ lat, lng });
-
-              setAddressText(address);
-
+              setSelectedCoords({ lat, lng });
+              if (address) {
+                setAddressText(address);
+              }
             }}
           />
 

@@ -8,12 +8,7 @@ interface TimeSelectorProps {
   onTimeChange?: (time: string | null) => void;
 }
 
-function formatLabel(hour: number, minute: number) {
-  const period = hour >= 12 ? "PM" : "AM";
-  const displayHour = hour % 12 === 0 ? 12 : hour % 12;
-  const displayMinute = minute.toString().padStart(2, "0");
-  return `${displayHour.toString().padStart(2, "0")}:${displayMinute} ${period}`;
-}
+
 
 export default function TimeSelector({
   schedule,
@@ -114,7 +109,7 @@ export default function TimeSelector({
       totalMinutes < CLOSING_HOUR * 60;
 
     if (isValid) {
-      onTimeChange?.(formatLabel(hour, minute));
+      onTimeChange?.(value);
     } else {
       onTimeChange?.(null);
     }

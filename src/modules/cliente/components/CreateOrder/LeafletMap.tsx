@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import "leaflet/dist/leaflet.css";
 
 import {
   MapContainer,
@@ -41,8 +42,33 @@ function ChangeCenter({
   const map = useMap();
 
   useEffect(() => {
-    map.setView(center);
+    const currentCenter = map.getCenter();
+    const [newLat, newLng] = center as [number, number];
+    
+    // Solo actualiza el centro si la diferencia es significativa.
+    // Esto evita un bucle infinito ("jumping") cuando el usuario
+    // arrastra el mapa y el estado actualiza el prop `center`.
+    if (
+      Math.abs(currentCenter.lat - newLat) > 0.0001 ||
+      Math.abs(currentCenter.lng - newLng) > 0.0001
+    ) {
+      map.setView(center);
+    }
   }, [center, map]);
+
+  return null;
+}
+
+function MapLifecycle() {
+  const map = useMap();
+  
+  useEffect(() => {
+    // Invalidate size after a short delay to allow for modal animations/layout
+    const timeout = setTimeout(() => {
+      map.invalidateSize();
+    }, 150);
+    return () => clearTimeout(timeout);
+  }, [map]);
 
   return null;
 }
@@ -66,11 +92,22 @@ function LocationEvents({
         );
 
         const data = await response.json();
+        
+        let newAddress = "Ubicación seleccionada";
+        if (data.address) {
+          const { road, suburb, neighbourhood, city, town, village } = data.address;
+          const parts = [road, suburb || neighbourhood, city || town || village].filter(Boolean);
+          if (parts.length > 0) {
+            newAddress = parts.join(", ");
+          } else if (data.display_name) {
+            newAddress = data.display_name.split(",").slice(0, 3).join(", ");
+          }
+        }
 
         onLocationChange(
           center.lat,
           center.lng,
-          data.display_name ?? ""
+          newAddress
         );
       } catch {
         onLocationChange(
@@ -104,7 +141,7 @@ export default function LeafletMap({
         />
 
         <ChangeCenter center={center} />
-
+        <MapLifecycle />
         <LocationEvents
             onLocationChange={onLocationChange}
         />

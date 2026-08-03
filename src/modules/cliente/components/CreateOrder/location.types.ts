@@ -6,8 +6,10 @@ export interface LocationData {
 
 export interface SavedAddress {
   id: number;
-  label: string; // ej. "Casa", "Oficina"
+  label: string;
   address: string;
   lat: number | null;
   lng: number | null;
+  referencia?: string | null;
+  principal?: boolean;
 }
