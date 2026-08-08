@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PATHS } from "../../../routes/path";
 import { PREPARATION_TIME, OPENING_HOUR, CLOSING_HOUR } from "../../../constants/schedule";
+import { UNIDAD_CONFIG, type UnidadMedida } from "../../../constants/capacity";
 
 import OrderQuantitySelector from "../components/CreateOrder/OrderQuantitySelector";
 import DeliveryLocationCard from "../components/CreateOrder/DeliveryLocationCard";
@@ -15,7 +16,6 @@ import type { LocationData, SavedAddress } from "../components/CreateOrder/locat
 import { getJson, postJson } from "../../../services/api";
 
 type DeliveryOption = "now" | "today" | "tomorrow";
-type UnidadMedida = "BARRILES" | "CISTERNA" | "GALONES";
 
 export default function CreateOrder() {
   const navigate = useNavigate();
@@ -65,21 +65,15 @@ export default function CreateOrder() {
 
   // Ajustar cantidad por defecto según unidad de medida seleccionada
   useEffect(() => {
-    if (unidadMedida === "CISTERNA") {
-      setQuantity(1);
-    } else if (unidadMedida === "GALONES") {
-      setQuantity(500);
-    } else {
-      setQuantity(20); // BARRILES
-    }
+    setQuantity(UNIDAD_CONFIG[unidadMedida].defaultQuantity);
   }, [unidadMedida]);
 
-  // Límite disponible según unidad
-  const availableQuantity = useMemo(() => {
-    if (unidadMedida === "CISTERNA") return 5;
-    if (unidadMedida === "GALONES") return 5000;
-    return 50; // BARRILES
-  }, [unidadMedida]);
+  // Límite disponible según unidad (basado en la capacidad real de un
+  // camión cisterna: ver src/constants/capacity.ts)
+  const availableQuantity = useMemo(
+    () => UNIDAD_CONFIG[unidadMedida].available,
+    [unidadMedida]
+  );
 
   const isWithinWorkingHoursNow = useMemo(() => {
     const now = new Date();
@@ -181,7 +175,14 @@ export default function CreateOrder() {
 
     try {
       const res = await postJson("/cliente/solicitudes", payload);
-      navigate(PATHS.CLIENT.WAITING(res.solicitud.id_solicitud));
+      if (schedule === "now") {
+        // Pedido inmediato: buscar conductores en tiempo real
+        navigate(PATHS.CLIENT.WAITING(res.solicitud.id_solicitud));
+      } else {
+        // Pedido programado (hoy más tarde / mañana): no tiene sentido
+        // mostrar la búsqueda inmediata de conductores.
+        navigate(PATHS.CLIENT.SCHEDULED(res.solicitud.id_solicitud));
+      }
     } catch (err: any) {
       setError(err.message || "Error al registrar la solicitud.");
     } finally {
@@ -232,11 +233,15 @@ export default function CreateOrder() {
         {/* Cantidad */}
         <section>
           <h2 className="font-bold text-xl mb-4">
-            Cantidad de {unidadMedida === "BARRILES" ? "barriles" : unidadMedida === "CISTERNA" ? "cisternas" : "galones"}
+            Cantidad de {UNIDAD_CONFIG[unidadMedida].pluralLabel}
           </h2>
           <OrderQuantitySelector
             key={unidadMedida} // Re-renderizar al cambiar la unidad
             available={availableQuantity}
+            initialValue={UNIDAD_CONFIG[unidadMedida].defaultQuantity}
+            unitPluralLabel={UNIDAD_CONFIG[unidadMedida].pluralLabel}
+            unitSingularLabel={UNIDAD_CONFIG[unidadMedida].singularLabel}
+            quickValues={UNIDAD_CONFIG[unidadMedida].quickValues}
             onQuantityChange={setQuantity}
           />
         </section>

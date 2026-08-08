@@ -8,6 +8,8 @@ export const PATHS = {
     CREATEORDER:"/cliente/createorder",
     WAITING: (id: number | string) => `/cliente/esperando-conductor/${id}`,
     WAITING_CONFIG: "/cliente/esperando-conductor/:id",
+    SCHEDULED: (id: number | string) => `/cliente/pedido-programado/${id}`,
+    SCHEDULED_CONFIG: "/cliente/pedido-programado/:id",
     CHECKOUT: (id: number | string) => `/cliente/checkout/${id}`,
     CHECKOUT_CONFIG: "/cliente/checkout/:id",
     ORDER_DETAIL: (id: number | string) => `/cliente/pedido/${id}`,

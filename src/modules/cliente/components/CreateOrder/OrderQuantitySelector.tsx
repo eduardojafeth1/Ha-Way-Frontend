@@ -3,29 +3,42 @@ import { FaMinus, FaPlus } from "react-icons/fa";
 
 interface OrderQuantitySelectorProps {
   available: number;
+  /** Cantidad inicial a mostrar (debe coincidir con la unidad seleccionada). */
+  initialValue: number;
+  /** Nombre en plural de la unidad, ej. "barriles", "galones", "cisternas". */
+  unitPluralLabel: string;
+  /** Nombre en singular de la unidad, ej. "barril", "galón", "cisterna". */
+  unitSingularLabel: string;
+  /** Valores rápidos de selección, coherentes con la unidad (ej. [1,2,3] para cisternas). */
+  quickValues: [number, number, number];
   onQuantityChange?: (quantity: number) => void;
 }
 
 export default function OrderQuantitySelector({
   available,
+  initialValue,
+  unitPluralLabel,
+  unitSingularLabel,
+  quickValues,
   onQuantityChange,
 }: OrderQuantitySelectorProps) {
   // Cantidad válida
-  const [quantity, setQuantity] = useState(20);
+  const [quantity, setQuantity] = useState(initialValue);
 
   // Texto del input
-  const [inputValue, setInputValue] = useState("20");
+  const [inputValue, setInputValue] = useState(initialValue.toString());
 
   // Error
   const [error, setError] = useState("");
 
   useEffect(() => {
     validate(inputValue);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const validate = (value: string) => {
     if (value === "") {
-      setError("Ingrese la cantidad de barriles.");
+      setError(`Ingrese la cantidad de ${unitPluralLabel}.`);
       return;
     }
 
@@ -42,7 +55,7 @@ export default function OrderQuantitySelector({
     }
 
     if (number > available) {
-      setError(`Solo hay ${available} barriles disponibles.`);
+      setError(`Solo hay ${available} ${unitPluralLabel} disponibles.`);
       return;
     }
 
@@ -149,13 +162,13 @@ export default function OrderQuantitySelector({
         Disponible:
         <span className="font-semibold">
           {" "}
-          {available} Barriles
+          {available} {available === 1 ? unitSingularLabel : unitPluralLabel}
         </span>
       </p>
 
       <div className="flex gap-4 mt-6">
 
-        {[20, 30, 50].map((item) => (
+        {quickValues.map((item) => (
 
           <button
             key={item}
@@ -180,18 +193,6 @@ export default function OrderQuantitySelector({
         ))}
 
       </div>
-
-      {/*
-      ===========================================
-      BACKEND
-
-      available llegará desde la API.
-
-      const available =
-      await providerService.getAvailableBarrels();
-
-      ===========================================
-      */}
 
     </div>
   );

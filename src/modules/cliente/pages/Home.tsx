@@ -10,6 +10,32 @@ import PreviousOrdersCard from "../components/Home/PreviousOrdersCard";
 import BottomNavigation from "../components/Home/BottomNavigation";
 import waterImage from "../../../assets/images/logo.png";
 
+function isScheduledRequest(solicitud: any) {
+  if (!solicitud.fecha_programada || !solicitud.hora_programada) {
+    return false;
+  }
+
+  const fecha = solicitud.fecha_programada.split("T")[0];
+  const hora = solicitud.hora_programada.substring(0, 8);
+
+  const scheduledDate = new Date(`${fecha}T${hora}`);
+
+  const publicationDate = new Date(solicitud.fecha_publicacion);
+
+  /*
+   * Los pedidos "Ahora" guardan prácticamente la misma
+   * hora en que fueron publicados.
+   *
+   * Si hay más de 15 minutos de diferencia,
+   * lo consideramos un pedido programado.
+   */
+  const differenceMinutes =
+    (scheduledDate.getTime() - publicationDate.getTime()) /
+    (1000 * 60);
+
+  return differenceMinutes > 15;
+}
+
 export default function Home() {
   const navigate = useNavigate();
   const [userName, setUserName] = useState("Cargando...");
@@ -58,16 +84,42 @@ export default function Home() {
         );
 
         activeSolicitudes.forEach((activeSolicitud: any) => {
+          const scheduled = isScheduledRequest(activeSolicitud);
+
           activeOrdersList.push({
             id: activeSolicitud.id_solicitud,
-            type: "solicitud",
-            supplierName: "Buscando proveedores...",
+
+            type: scheduled
+              ? "solicitud_programada"
+              : "solicitud",
+
+            supplierName: scheduled
+              ? "Pedido programado"
+              : "Buscando proveedores...",
+
             barrels: activeSolicitud.cantidad,
-            date: new Date(activeSolicitud.fecha_publicacion).toLocaleDateString(),
-            status: activeSolicitud.estado === "PUBLICADA" ? "Buscando..." : "Ofertas recibidas",
-            estimatedTime: "Pendiente",
+
+            date: scheduled
+              ? new Date(
+                  `${activeSolicitud.fecha_programada.split("T")[0]}T00:00:00`
+                ).toLocaleDateString("es-HN")
+              : new Date(
+                  activeSolicitud.fecha_publicacion
+                ).toLocaleDateString("es-HN"),
+
+            status: scheduled
+              ? "Programado"
+              : activeSolicitud.estado === "PUBLICADA"
+                ? "Buscando..."
+                : "Ofertas recibidas",
+
+            estimatedTime: scheduled
+              ? activeSolicitud.hora_programada?.substring(0, 5) ?? "Pendiente"
+              : "Pendiente",
+
             total: 0,
-            image: waterImage
+
+            image: waterImage,
           });
         });
 
@@ -95,6 +147,53 @@ export default function Home() {
 
     fetchData();
   }, []);
+
+  const handleViewCurrentOrder = async (
+      id: number,
+      type: string
+    ) => {
+      // Si ya es un pedido creado, ir al detalle normal
+      if (type === "pedido") {
+        navigate(PATHS.CLIENT.ORDER_DETAIL(id));
+        return;
+      }
+
+      try {
+        // Consultar si la solicitud ya tiene ofertas
+        const offers = await getJson(
+          `/cliente/solicitudes/${id}/ofertas`
+        );
+
+        // Si ya existen ofertas, mostrar directamente
+        // la pantalla de selección de proveedores
+        if (Array.isArray(offers) && offers.length > 0) {
+          navigate(PATHS.CLIENT.WAITING(id));
+          return;
+        }
+
+        // Si es una solicitud programada y aún no tiene ofertas
+        if (type === "solicitud_programada") {
+          navigate(PATHS.CLIENT.SCHEDULED(id));
+          return;
+        }
+
+        // Solicitud inmediata sin ofertas
+        navigate(PATHS.CLIENT.WAITING(id));
+
+      } catch (error) {
+        console.error(
+          "Error al consultar las ofertas:",
+          error
+        );
+
+        // En caso de error, mantener el flujo según el tipo
+        if (type === "solicitud_programada") {
+          navigate(PATHS.CLIENT.SCHEDULED(id));
+        } else {
+          navigate(PATHS.CLIENT.WAITING(id));
+        }
+      }
+    };
 
   return (
     <div className="min-h-screen bg-gray-100 pb-28">
@@ -138,13 +237,8 @@ export default function Home() {
           order={currentOrders.length > 0 ? currentOrders[0] : null}
           hasMore={currentOrders.length > 1}
           onViewAll={() => navigate(PATHS.CLIENT.HISTORY)}
-          onViewDetail={(id, type) => {
-            if (type === "solicitud") {
-              navigate(PATHS.CLIENT.WAITING(id));
-            } else {
-              navigate(PATHS.CLIENT.ORDER_DETAIL(id));
-            }
-          }}
+          onViewDetail={handleViewCurrentOrder}
+          
         />
 
         <PreviousOrdersCard
