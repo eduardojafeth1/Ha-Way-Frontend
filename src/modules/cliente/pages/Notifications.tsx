@@ -4,6 +4,7 @@ import { PATHS } from "../../../routes/path";
 import gota from "../../../assets/icons/gota_pedidoactual.svg";
 import BottomNavigation from "../components/Home/BottomNavigation";
 import { getJson, putJson } from "../../../services/api";
+import Header from "../components/Home/Header";
 
 interface Notification {
     id_notificacion: number;
@@ -122,29 +123,14 @@ export default function ClientNotifications() {
         <div className="min-h-screen bg-gray-100 pb-28">
 
             {/* ── HEADER ── */}
-            <header className="relative w-full bg-[var(--primary)] rounded-b-[40px] px-6 pt-8 pb-10 text-white">
-                <button
-                    onClick={() => navigate(PATHS.CLIENT.HOME)}
-                    className="absolute top-8 right-6 text-2xl hover:scale-110 transition-transform"
-                    aria-label="Cerrar sesión"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                        strokeWidth={2} stroke="currentColor" className="w-7 h-7">
-                        <path strokeLinecap="round" strokeLinejoin="round"
-                            d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6A2.25 2.25 0 005.25 5.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M18 15l3-3m0 0l-3-3m3 3H9" />
-                    </svg>
-                </button>
-                <div>
-                    <p className="text-base font-light">Hola,</p>
-                    <h1 className="text-3xl font-semibold leading-none">{clientName}</h1>
-                </div>
-                {unreadCount > 0 && (
-                    <div className="mt-4 flex items-center gap-2">
-                        <span className="w-3 h-3 bg-red-400 rounded-full animate-pulse"></span>
-                        <p className="text-sm font-medium">{unreadCount} no leídas</p>
-                    </div>
-                )}
-            </header>
+           <Header
+                userName={clientName}
+                onLogout={() => {
+                    localStorage.removeItem("token");
+                    localStorage.removeItem("userRole");
+                    navigate(PATHS.HOME);
+                }}
+            />
 
             <main className="px-5 mt-6 space-y-4">
 
