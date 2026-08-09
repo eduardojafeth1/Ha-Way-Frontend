@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { PATHS } from "../../../routes/path";
 
@@ -11,7 +11,7 @@ import ClientSavedCardsSection from "../components/profile/ClientSavedCardsSecti
 import SystemSettingsList from "../../conductor/components/profile/SystemSettingsList";
 import LogoutButton from "../../conductor/components/profile/LogoutButton";
 import BottomNavigation from "../components/Home/BottomNavigation";
-import { getJson, putJson } from "../../../services/api";
+import { getJson, putJson, putFormData } from "../../../services/api";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -38,6 +38,9 @@ export default function Profile() {
   const [addresses, setAddresses] = useState<{ id: number; label: string; address: string; }[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
 
+  // Subida de foto de perfil
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
 
   // Cargar perfil al montar
@@ -94,6 +97,37 @@ export default function Profile() {
     }
   };
 
+  // Subir nueva foto de perfil
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Reset del input para poder volver a seleccionar el mismo archivo si hace falta
+    e.target.value = "";
+
+    if (!file.type.startsWith("image/")) {
+      setError("El archivo debe ser una imagen.");
+      return;
+    }
+
+    setError("");
+    setSuccess("");
+    setUploadingPhoto(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("foto_perfil", file);
+
+      const result = await putFormData("/users/perfil/foto_perfil", formData);
+      setPhotoUrl(result.foto_perfil);
+      setSuccess("Foto de perfil actualizada.");
+    } catch (err: any) {
+      setError(err.message || "Error al actualizar la foto de perfil.");
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 pb-28">
 
@@ -123,11 +157,26 @@ export default function Profile() {
           </div>
         ) : (
           <>
+            {/* Input de archivo oculto, disparado por el botón de editar foto */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handlePhotoChange}
+            />
+
             <ProfileAvatar
               userName={name || "Cliente"}
               photoUrl={photoUrl}
-              onEditPhoto={() => console.log("Editar foto de perfil")}
+              onEditPhoto={() => {
+                if (!uploadingPhoto) fileInputRef.current?.click();
+              }}
             />
+
+            {uploadingPhoto && (
+              <p className="text-center text-sm text-gray-500 -mt-4">Subiendo foto...</p>
+            )}
 
             <ClientProfileForm
               name={name}
@@ -140,35 +189,13 @@ export default function Profile() {
               isEditing={isEditing}
             />
 
-            {!isEditing ? (
-              <EditProfileButton
-                onClick={() => setIsEditing(true)}
-              />
-            ) : (
-              <div className="flex gap-3 mt-4">
-                <button
-                  onClick={() => setIsEditing(false)}
-                  disabled={saving}
-                  className="w-1/3 bg-gray-200 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-300 transition"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="w-2/3 bg-[var(--primary)] text-white py-3 rounded-xl font-medium shadow-sm hover:opacity-90 transition flex items-center justify-center gap-2"
-                >
-                  {saving ? (
-                    <>
-                      <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                      Guardando...
-                    </>
-                  ) : (
-                    "Enviar"
-                  )}
-                </button>
-              </div>
-            )}
+            <EditProfileButton
+              isEditing={isEditing}
+              onEdit={() => setIsEditing(true)}
+              onCancel={() => setIsEditing(false)}
+              onSave={handleSave}
+              saving={saving}
+            />
           </>
         )}
 
@@ -186,7 +213,7 @@ export default function Profile() {
         />
 
         <LogoutButton
-          onLogout={() => {
+          onClick={() => {
             localStorage.removeItem("token");
             localStorage.removeItem("userRole");
             navigate(PATHS.HOME);

@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PATHS } from "../../../routes/path";
 import { PREPARATION_TIME, OPENING_HOUR, CLOSING_HOUR } from "../../../constants/schedule";
+import { UNIDAD_CONFIG, type UnidadMedida } from "../../../constants/capacity";
 
 import OrderQuantitySelector from "../components/CreateOrder/OrderQuantitySelector";
 import DeliveryLocationCard from "../components/CreateOrder/DeliveryLocationCard";
@@ -15,7 +16,20 @@ import type { LocationData, SavedAddress } from "../components/CreateOrder/locat
 import { getJson, postJson } from "../../../services/api";
 
 type DeliveryOption = "now" | "today" | "tomorrow";
-type UnidadMedida = "BARRILES" | "CISTERNA" | "GALONES";
+
+/**
+ * Devuelve la fecha en formato "YYYY-MM-DD" usando la hora LOCAL del
+ * dispositivo (no UTC). `Date.toISOString()` convierte a UTC antes de
+ * extraer la fecha, lo que provoca que el día se adelante en zonas
+ * horarias detrás de UTC (como Honduras, UTC-6) al hacer pedidos
+ * después de las 6:00 PM hora local.
+ */
+function toLocalDateString(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
 
 export default function CreateOrder() {
   const navigate = useNavigate();
@@ -65,21 +79,15 @@ export default function CreateOrder() {
 
   // Ajustar cantidad por defecto según unidad de medida seleccionada
   useEffect(() => {
-    if (unidadMedida === "CISTERNA") {
-      setQuantity(1);
-    } else if (unidadMedida === "GALONES") {
-      setQuantity(500);
-    } else {
-      setQuantity(20); // BARRILES
-    }
+    setQuantity(UNIDAD_CONFIG[unidadMedida].defaultQuantity);
   }, [unidadMedida]);
 
-  // Límite disponible según unidad
-  const availableQuantity = useMemo(() => {
-    if (unidadMedida === "CISTERNA") return 5;
-    if (unidadMedida === "GALONES") return 5000;
-    return 50; // BARRILES
-  }, [unidadMedida]);
+  // Límite disponible según unidad (basado en la capacidad real de un
+  // camión cisterna: ver src/constants/capacity.ts)
+  const availableQuantity = useMemo(
+    () => UNIDAD_CONFIG[unidadMedida].available,
+    [unidadMedida]
+  );
 
   const isWithinWorkingHoursNow = useMemo(() => {
     const now = new Date();
@@ -158,15 +166,15 @@ export default function CreateOrder() {
 
     const hoy = new Date();
     if (schedule === "now") {
-      fechaProgramada = hoy.toISOString().split("T")[0];
+      fechaProgramada = toLocalDateString(hoy);
       horaProgramada = hoy.toTimeString().split(" ")[0]; // HH:MM:SS
     } else if (schedule === "today") {
-      fechaProgramada = hoy.toISOString().split("T")[0];
+      fechaProgramada = toLocalDateString(hoy);
       horaProgramada = time ? `${time}:00` : "";
     } else if (schedule === "tomorrow") {
       const mañana = new Date();
       mañana.setDate(mañana.getDate() + 1);
-      fechaProgramada = mañana.toISOString().split("T")[0];
+      fechaProgramada = toLocalDateString(mañana);
       horaProgramada = time ? `${time}:00` : "";
     }
 
@@ -181,7 +189,14 @@ export default function CreateOrder() {
 
     try {
       const res = await postJson("/cliente/solicitudes", payload);
-      navigate(PATHS.CLIENT.WAITING(res.solicitud.id_solicitud));
+      if (schedule === "now") {
+        // Pedido inmediato: buscar conductores en tiempo real
+        navigate(PATHS.CLIENT.WAITING(res.solicitud.id_solicitud));
+      } else {
+        // Pedido programado (hoy más tarde / mañana): no tiene sentido
+        // mostrar la búsqueda inmediata de conductores.
+        navigate(PATHS.CLIENT.SCHEDULED(res.solicitud.id_solicitud));
+      }
     } catch (err: any) {
       setError(err.message || "Error al registrar la solicitud.");
     } finally {
@@ -232,11 +247,15 @@ export default function CreateOrder() {
         {/* Cantidad */}
         <section>
           <h2 className="font-bold text-xl mb-4">
-            Cantidad de {unidadMedida === "BARRILES" ? "barriles" : unidadMedida === "CISTERNA" ? "cisternas" : "galones"}
+            Cantidad de {UNIDAD_CONFIG[unidadMedida].pluralLabel}
           </h2>
           <OrderQuantitySelector
             key={unidadMedida} // Re-renderizar al cambiar la unidad
             available={availableQuantity}
+            initialValue={UNIDAD_CONFIG[unidadMedida].defaultQuantity}
+            unitPluralLabel={UNIDAD_CONFIG[unidadMedida].pluralLabel}
+            unitSingularLabel={UNIDAD_CONFIG[unidadMedida].singularLabel}
+            quickValues={UNIDAD_CONFIG[unidadMedida].quickValues}
             onQuantityChange={setQuantity}
           />
         </section>

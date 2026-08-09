@@ -1,20 +1,12 @@
 import { useState, useEffect } from "react";
-import { getJson, postJson, deleteJson, putJson } from "../../../../services/api";
-import { FaCreditCard, FaPlus, FaTrash, FaCheckCircle, FaStar } from "react-icons/fa";
+import { getJson, deleteJson, putJson } from "../../../../services/api";
+import { FaCreditCard, FaPlus, FaTrash, FaStar } from "react-icons/fa";
+import AddCardForm from "../AddCardForm";
 
 export default function ClientSavedCardsSection() {
     const [cards, setCards] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [isAddingCard, setIsAddingCard] = useState(false);
-    
-    // New Card Form
-    const [newCard, setNewCard] = useState({
-        numero_tarjeta: "",
-        titular: "",
-        fecha_vencimiento: "",
-        cvv: "",
-        marca: "Visa"
-    });
 
     useEffect(() => {
         fetchCards();
@@ -29,23 +21,6 @@ export default function ClientSavedCardsSection() {
             console.error("Error fetching cards:", err);
         } finally {
             setLoading(false);
-        }
-    };
-
-    const handleAddCard = async () => {
-        if (!newCard.numero_tarjeta || !newCard.titular) {
-            alert("Número de tarjeta y titular son obligatorios");
-            return;
-        }
-
-        try {
-            await postJson("/cliente/tarjetas", newCard);
-            setIsAddingCard(false);
-            setNewCard({ numero_tarjeta: "", titular: "", fecha_vencimiento: "", cvv: "", marca: "Visa" });
-            fetchCards();
-        } catch (err) {
-            console.error("Error adding card:", err);
-            alert("Hubo un error al guardar la tarjeta");
         }
     };
 
@@ -94,7 +69,7 @@ export default function ClientSavedCardsSection() {
                                 <div className={`w-10 h-10 rounded-full flex items-center justify-center ${card.principal ? 'bg-blue-50 text-blue-500' : 'bg-gray-50 text-gray-400'}`}>
                                     <FaCreditCard size={18} />
                                 </div>
-                                
+
                                 <div className="flex-1">
                                     <p className="font-bold text-gray-800 flex items-center gap-2">
                                         {card.marca} **** {card.ultimos4}
@@ -126,71 +101,25 @@ export default function ClientSavedCardsSection() {
                 </div>
             )}
 
-            {/* Modal para añadir tarjeta */}
+            {/* Modal para añadir tarjeta: usa el mismo formulario que el checkout */}
             {isAddingCard && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end justify-center z-50 p-4 pb-12">
-                    <div className="bg-white rounded-2xl w-full max-w-md p-6 animate-slide-up shadow-2xl">
+                <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50 p-4 pb-12">
+                    <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl max-h-[85vh] overflow-y-auto">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="font-bold text-xl text-gray-800">Nueva Tarjeta</h3>
-                            <button onClick={() => setIsAddingCard(false)} className="text-gray-400 hover:text-gray-600 bg-gray-100 w-8 h-8 rounded-full flex items-center justify-center">✕</button>
-                        </div>
-                        
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-1">Número de Tarjeta</label>
-                                <input
-                                    type="text"
-                                    maxLength={16}
-                                    value={newCard.numero_tarjeta}
-                                    onChange={(e) => setNewCard({...newCard, numero_tarjeta: e.target.value})}
-                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition"
-                                    placeholder="0000 0000 0000 0000"
-                                />
-                            </div>
-                            
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-1">Nombre del Titular</label>
-                                <input
-                                    type="text"
-                                    value={newCard.titular}
-                                    onChange={(e) => setNewCard({...newCard, titular: e.target.value})}
-                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition"
-                                    placeholder="Ej. Juan Pérez"
-                                />
-                            </div>
-
-                            <div className="flex gap-4">
-                                <div className="flex-1">
-                                    <label className="block text-sm font-bold text-gray-700 mb-1">Vencimiento</label>
-                                    <input
-                                        type="text"
-                                        maxLength={5}
-                                        value={newCard.fecha_vencimiento}
-                                        onChange={(e) => setNewCard({...newCard, fecha_vencimiento: e.target.value})}
-                                        className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition"
-                                        placeholder="MM/YY"
-                                    />
-                                </div>
-                                <div className="flex-1">
-                                    <label className="block text-sm font-bold text-gray-700 mb-1">CVV</label>
-                                    <input
-                                        type="password"
-                                        maxLength={4}
-                                        value={newCard.cvv}
-                                        onChange={(e) => setNewCard({...newCard, cvv: e.target.value})}
-                                        className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition"
-                                        placeholder="123"
-                                    />
-                                </div>
-                            </div>
-
                             <button
-                                onClick={handleAddCard}
-                                className="w-full bg-[var(--primary)] text-white py-4 rounded-xl font-bold mt-6 hover:bg-cyan-600 transition shadow-lg shadow-blue-500/30"
-                            >
-                                Guardar Tarjeta
-                            </button>
+                                onClick={() => setIsAddingCard(false)}
+                                className="text-gray-400 hover:text-gray-600 bg-gray-100 w-8 h-8 rounded-full flex items-center justify-center"
+                            >✕</button>
                         </div>
+
+                        <AddCardForm
+                            onSuccess={() => {
+                                setIsAddingCard(false);
+                                fetchCards();
+                            }}
+                            onCancel={() => setIsAddingCard(false)}
+                        />
                     </div>
                 </div>
             )}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { HiOutlineXMark, HiOutlineViewfinderCircle } from "react-icons/hi2";
 import type { LocationData } from "./location.types";
 import LeafletMap from "./LeafletMap";
@@ -30,6 +30,17 @@ export default function MapPickerModal({
   });
   const [isLocating, setIsLocating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Estabilizamos la referencia del array `center` para que solo cambie
+  // cuando los valores numéricos realmente cambien (ej. al usar "Mi ubicación").
+  // Si se recreara en cada render (como `[mapCenter.lat, mapCenter.lng]` directo),
+  // el useEffect de ChangeCenter en LeafletMap se dispararía en cada re-render
+  // (por ejemplo, después de que el reverse geocoding de Nominatim responde al
+  // arrastrar el mapa), y el mapa "saltaría" de vuelta a la posición inicial.
+  const stableMapCenter = useMemo<[number, number]>(
+    () => [mapCenter.lat, mapCenter.lng],
+    [mapCenter.lat, mapCenter.lng]
+  );
 
   if (!isOpen) return null;
 
@@ -164,7 +175,7 @@ export default function MapPickerModal({
         <div className="mb-4">
 
           <LeafletMap
-            center={[mapCenter.lat, mapCenter.lng]}
+            center={stableMapCenter}
             onLocationChange={(lat, lng, address) => {
               setSelectedCoords({ lat, lng });
               if (address) {

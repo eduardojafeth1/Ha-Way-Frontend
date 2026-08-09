@@ -14,6 +14,7 @@ import DriverNotifications from "../modules/conductor/pages/Notifications";
 import DriverOrderTracking from "../modules/conductor/pages/OrderTracking";
 import CreateOrder from "../modules/cliente/pages/CreateOrder";
 import WaitingDriver from "../modules/cliente/pages/WaitingDriver";
+import ScheduledOrder from "../modules/cliente/pages/ScheduledOrder";
 import OrderCheckout from "../modules/cliente/pages/OrderCheckout";
 import OrderDetail from "../modules/cliente/pages/OrderDetail";
 import ClientHistory from "../modules/cliente/pages/History";
@@ -67,6 +68,11 @@ export default function AppRoutes() {
         <Route
           path={PATHS.CLIENT.WAITING_CONFIG}
           element={<WaitingDriver />}
+        />
+
+        <Route
+          path={PATHS.CLIENT.SCHEDULED_CONFIG}
+          element={<ScheduledOrder />}
         />
 
         <Route
