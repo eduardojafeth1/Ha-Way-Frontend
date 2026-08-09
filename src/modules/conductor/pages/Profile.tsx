@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { PATHS } from "../../../routes/path";
 import DriverBottomNav from "../components/DriverBottomNav";
@@ -11,10 +11,12 @@ import SavedAddressSelect from "../components/profile/SavedAddressSelect";
 import SavedCardsSection from "../components/profile/SavedCardsSection";
 import {SystemSettingsListConductor as SystemSettingsList} from "../components/profile/SystemSettingsList";
 import LogoutButton from "../components/profile/LogoutButton";
-import { getJson, putJson } from "../../../services/api";
+import { getJson, putJson, putFormData } from "../../../services/api";
 
 export default function Profile() {
     const navigate = useNavigate();
+
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Estados de perfil
     const [name, setName] = useState("");
@@ -26,6 +28,8 @@ export default function Profile() {
     const [identity, setIdentity] = useState("");
     const [license, setLicense] = useState("");
     const [expiryDate, setExpiryDate] = useState("");
+    const [truckPhotoUrl, setTruckPhotoUrl] = useState<string | null>(null);
+    const [truckPhotoFile, setTruckPhotoFile] = useState<File | null>(null);
 
     // Estados de control
     const [loading, setLoading] = useState(true);
@@ -67,6 +71,7 @@ export default function Profile() {
                 setIdentity(data.identidad || "");
                 setLicense(data.numero_licencia || "");
                 setExpiryDate(data.fecha_vencimiento ? data.fecha_vencimiento.split("T")[0] : "");
+                setTruckPhotoUrl(data.foto_camion || null);
 
                 // Guardar copia original para restaurar al cancelar
                 setOriginalData({
@@ -77,6 +82,7 @@ export default function Profile() {
                     identity: data.identidad || "",
                     license: data.numero_licencia || "",
                     expiryDate: data.fecha_vencimiento ? data.fecha_vencimiento.split("T")[0] : "",
+                    truckPhotoUrl: data.foto_camion || null,
                 });
             } catch (err: any) {
                 setError("Error al cargar la información del perfil.");
@@ -107,6 +113,18 @@ export default function Profile() {
                 numero_licencia: license,
                 fecha_vencimiento: expiryDate,
             });
+
+            // Subir foto del camión si se seleccionó una nueva
+            let newTruckPhotoUrl = truckPhotoUrl;
+            if (truckPhotoFile) {
+                const formData = new FormData();
+                formData.append("foto_camion", truckPhotoFile);
+                const result = await putFormData("/users/perfil/foto_camion", formData);
+                newTruckPhotoUrl = result.foto_camion;
+                setTruckPhotoUrl(newTruckPhotoUrl);
+                setTruckPhotoFile(null);
+            }
+
             setSuccess("Perfil actualizado exitosamente.");
             setIsEditing(false);
             
@@ -118,7 +136,8 @@ export default function Profile() {
                 photoUrl,
                 identity,
                 license,
-                expiryDate
+                expiryDate,
+                truckPhotoUrl: newTruckPhotoUrl
             });
         } catch (err: any) {
             setError(err.message || "Error al actualizar el perfil.");
@@ -138,6 +157,26 @@ export default function Profile() {
         setIdentity(originalData.identity);
         setLicense(originalData.license);
         setExpiryDate(originalData.expiryDate);
+        setTruckPhotoUrl(originalData.truckPhotoUrl);
+        setTruckPhotoFile(null);
+    };
+
+    const handleProfilePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files.length > 0) {
+            const file = e.target.files[0];
+            const formData = new FormData();
+            formData.append("foto_perfil", file);
+
+            try {
+                // Actualizar inmediatamente en el servidor
+                const result = await putFormData("/users/perfil/foto_perfil", formData);
+                setPhotoUrl(result.foto_perfil);
+                setOriginalData((prev: any) => ({ ...prev, photoUrl: result.foto_perfil }));
+                setSuccess("Foto de perfil actualizada exitosamente.");
+            } catch (err: any) {
+                setError(err.message || "Error al actualizar la foto de perfil.");
+            }
+        }
     };
 
     return (
@@ -172,7 +211,14 @@ export default function Profile() {
                         <ProfileAvatar
                             userName={name || "Conductor"}
                             photoUrl={photoUrl}
-                            onEditPhoto={() => console.log("Editar foto de perfil")}
+                            onEditPhoto={() => fileInputRef.current?.click()}
+                        />
+                        <input 
+                            type="file" 
+                            ref={fileInputRef} 
+                            style={{ display: 'none' }} 
+                            accept="image/*"
+                            onChange={handleProfilePhotoChange}
                         />
 
                         <DriverProfileForm
@@ -182,12 +228,14 @@ export default function Profile() {
                             identity={identity}
                             license={license}
                             expiryDate={expiryDate}
+                            truckPhotoUrl={truckPhotoFile ? URL.createObjectURL(truckPhotoFile) : truckPhotoUrl}
                             isEditing={isEditing}
                             onChangeName={setName}
                             onChangePhone={setPhone}
                             onChangeIdentity={setIdentity}
                             onChangeLicense={setLicense}
                             onChangeExpiryDate={setExpiryDate}
+                            onChangeTruckPhoto={setTruckPhotoFile}
                         />
 
                         <EditProfileButton

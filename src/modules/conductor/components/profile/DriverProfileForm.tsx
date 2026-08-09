@@ -11,6 +11,8 @@ interface DriverProfileFormProps {
   onChangeIdentity: (value: string) => void;
   onChangeLicense: (value: string) => void;
   onChangeExpiryDate: (value: string) => void;
+  truckPhotoUrl?: string | null;
+  onChangeTruckPhoto?: (file: File | null) => void;
 }
 
 export default function DriverProfileForm({
@@ -26,6 +28,8 @@ export default function DriverProfileForm({
   onChangeIdentity,
   onChangeLicense,
   onChangeExpiryDate,
+  truckPhotoUrl,
+  onChangeTruckPhoto,
 }: DriverProfileFormProps) {
   return (
     <div className="space-y-4">
@@ -169,6 +173,43 @@ export default function DriverProfileForm({
               : "bg-gray-50 text-gray-600 cursor-not-allowed"}
           `}
         />
+      </div>
+
+      {/* Foto del Camión */}
+      <div>
+        <label className="text-sm text-gray-600 mb-2 block">
+          Foto del Camión
+        </label>
+        
+        {truckPhotoUrl && (
+          <div className="mb-3 w-full h-48 bg-gray-200 rounded-xl overflow-hidden border border-gray-300">
+            <img src={truckPhotoUrl} alt="Foto del camión" className="w-full h-full object-cover" />
+          </div>
+        )}
+        
+        {isEditing && onChangeTruckPhoto && (
+          <div className="relative">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                if (e.target.files && e.target.files.length > 0) {
+                  onChangeTruckPhoto(e.target.files[0]);
+                }
+              }}
+              className="
+                w-full
+                text-sm text-gray-500
+                file:mr-4 file:py-2 file:px-4
+                file:rounded-full file:border-0
+                file:text-sm file:font-semibold
+                file:bg-[var(--secondary)] file:text-white
+                hover:file:opacity-90 cursor-pointer
+              "
+            />
+            <p className="text-xs text-gray-400 mt-1">Sube una nueva foto para actualizar la imagen de tu camión.</p>
+          </div>
+        )}
       </div>
 
     </div>

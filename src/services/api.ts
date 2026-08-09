@@ -126,3 +126,24 @@ export async function deleteJson(endpoint: string) {
   }
   return responseData;
 }
+export async function putFormData(endpoint: string, formData: FormData) {
+  const url = `${API_URL}${endpoint}`;
+  const token = localStorage.getItem("token");
+  const headers: Record<string, string> = {};
+  
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(url, {
+    method: "PUT",
+    headers,
+    body: formData,
+  });
+
+  const responseData = await response.json();
+  if (!response.ok) {
+    throw new Error(responseData.error || responseData.message || "Error al actualizar los datos.");
+  }
+  return responseData;
+}
