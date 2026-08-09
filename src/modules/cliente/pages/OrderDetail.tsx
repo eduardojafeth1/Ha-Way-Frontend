@@ -3,9 +3,9 @@ import { useNavigate, useParams } from "react-router-dom";
 import { PATHS } from "../../../routes/path";
 import PageHeader from "../components/PageHeader";
 import { getJson, putJson } from "../../../services/api";
-import { FaMapMarkerAlt } from "react-icons/fa";
 import TrackingTimeline from "../components/TrackingTimeline";
 import RatingForm from "../components/RatingForm";
+import DeliveryMap from "../../core/components/DeliveryMap";
 
 export default function OrderDetail() {
     const { id: pedidoId } = useParams();
@@ -96,14 +96,15 @@ export default function OrderDetail() {
                     </div>
                 )}
 
-                {/* Mock Map Card */}
+                {/* Mapa de la dirección de entrega */}
                 {pedido.estado !== 'CANCELADO' && (
-                    <div className="bg-gray-200 rounded-xl shadow-sm border border-gray-100 h-40 mb-4 relative overflow-hidden flex items-center justify-center">
-                        {/* Simulación del mapa base */}
-                        <div className="absolute inset-0 opacity-40 bg-[url('https://maps.wikimedia.org/osm-intl/14/4195/7279.png')] bg-cover bg-center"></div>
-                        <div className="relative z-10 w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg animate-bounce">
-                            <FaMapMarkerAlt className="text-[var(--primary)]" size={24} />
-                        </div>
+                    <div className="mb-4">
+                        <DeliveryMap
+                            latitude={parseFloat(pedido.dest_latitud)}
+                            longitude={parseFloat(pedido.dest_longitud)}
+                            address={pedido.direccion}
+                            referencia={pedido.referencia}
+                        />
                     </div>
                 )}
 

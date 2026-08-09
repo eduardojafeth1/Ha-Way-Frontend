@@ -6,6 +6,7 @@ import OrderStatusTimeline from "../components/tracking/OrderStatusTimeline";
 import type { TrackingStep } from "../components/tracking/OrderStatusTimeline";
 import OrderDetailsCard from "../components/tracking/OrderDetailsCard";
 import DeliveryConfirmation from "../components/tracking/DeliveryConfirmation";
+import DeliveryMap from "../../core/components/DeliveryMap";
 import { getJson, putJson } from "../../../services/api";
 
 const STEPS: TrackingStep[] = [
@@ -118,9 +119,12 @@ export default function OrderTracking() {
           delivered={currentStatus === "ENTREGADO"}
         />
 
-        <div className="w-full h-40 rounded-xl bg-gray-200 flex items-center justify-center text-gray-400 text-sm">
-          Mapa (pendiente de integración)
-        </div>
+        <DeliveryMap
+          latitude={parseFloat(pedido.dest_latitud)}
+          longitude={parseFloat(pedido.dest_longitud)}
+          address={pedido.direccion}
+          referencia={pedido.referencia}
+        />
 
         <OrderStatusTimeline 
           steps={STEPS} 
