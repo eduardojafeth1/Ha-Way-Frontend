@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { PATHS } from "../../../routes/path";
 import PageHeader from "../components/PageHeader";
-import { getJson, putJson } from "../../../services/api";
+import { getJson, putJson, postJson } from "../../../services/api";
 import TrackingTimeline from "../components/TrackingTimeline";
 import RatingForm from "../components/RatingForm";
 import DeliveryMap from "../../core/components/DeliveryMap";
@@ -60,7 +60,7 @@ export default function OrderDetail() {
     else if (pedido.estado === 'ENTREGADO') progress = 100;
 
     const handleRatingSubmit = async (puntuacion: number, comentario: string) => {
-        await putJson(`/cliente/pedidos/${pedidoId}/calificar`, { puntuacion, comentario });
+        await postJson(`/cliente/pedidos/${pedidoId}/calificar`, { puntuacion, comentario });
         setPedido({ ...pedido, calificado: true });
     };
 
