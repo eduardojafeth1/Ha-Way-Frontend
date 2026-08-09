@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { PATHS } from "../../../routes/path";
 import DriverBottomNav from "../components/DriverBottomNav";
@@ -11,16 +11,22 @@ import SavedAddressSelect from "../components/profile/SavedAddressSelect";
 import SavedCardsSection from "../components/profile/SavedCardsSection";
 import {SystemSettingsListConductor as SystemSettingsList} from "../components/profile/SystemSettingsList";
 import LogoutButton from "../components/profile/LogoutButton";
-import { getJson, putJson } from "../../../services/api";
+import { getJson, putJson, putFormData } from "../../../services/api";
+import { HiOutlinePencil } from "react-icons/hi2";
 
 export default function Profile() {
     const navigate = useNavigate();
+
+    // Referencias para inputs de archivo ocultos
+    const profileFileInputRef = useRef<HTMLInputElement>(null);
+    const truckFileInputRef = useRef<HTMLInputElement>(null);
 
     // Estados de perfil
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [phone, setPhone] = useState("");
     const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+    const [truckPhotoUrl, setTruckPhotoUrl] = useState<string | null>(null);
 
     // Estados específicos del conductor
     const [identity, setIdentity] = useState("");
@@ -62,6 +68,7 @@ export default function Profile() {
                 setEmail(data.correo || "");
                 setPhone(data.telefono || "");
                 setPhotoUrl(data.foto || null);
+                setTruckPhotoUrl(data.foto_camion || null);
                 
                 // Cargar campos específicos del conductor
                 setIdentity(data.identidad || "");
@@ -74,6 +81,7 @@ export default function Profile() {
                     email: data.correo || "",
                     phone: data.telefono || "",
                     photoUrl: data.foto || null,
+                    truckPhotoUrl: data.foto_camion || null,
                     identity: data.identidad || "",
                     license: data.numero_licencia || "",
                     expiryDate: data.fecha_vencimiento ? data.fecha_vencimiento.split("T")[0] : "",
@@ -87,6 +95,46 @@ export default function Profile() {
 
         loadProfile();
     }, []);
+
+    const handleUploadProfilePhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        try {
+            setSaving(true);
+            const formData = new FormData();
+            formData.append("foto_perfil", file);
+            
+            const result = await putFormData("/users/perfil/foto_perfil", formData);
+            setPhotoUrl(result.foto_perfil);
+            setSuccess("Foto de perfil actualizada correctamente.");
+        } catch (err: any) {
+            setError(err.message || "Error al actualizar la foto de perfil.");
+        } finally {
+            setSaving(false);
+            if (profileFileInputRef.current) profileFileInputRef.current.value = "";
+        }
+    };
+
+    const handleUploadTruckPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        try {
+            setSaving(true);
+            const formData = new FormData();
+            formData.append("foto_camion", file);
+            
+            const result = await putFormData("/users/perfil/foto_camion", formData);
+            setTruckPhotoUrl(result.foto_camion);
+            setSuccess("Foto del camión actualizada correctamente.");
+        } catch (err: any) {
+            setError(err.message || "Error al actualizar la foto del camión.");
+        } finally {
+            setSaving(false);
+            if (truckFileInputRef.current) truckFileInputRef.current.value = "";
+        }
+    };
 
     // Guardar cambios
     const handleSave = async () => {
@@ -169,10 +217,14 @@ export default function Profile() {
                     </div>
                 ) : (
                     <>
+                        {/* Inputs de archivo ocultos */}
+                        <input type="file" accept="image/*" className="hidden" ref={profileFileInputRef} onChange={handleUploadProfilePhoto} />
+                        <input type="file" accept="image/*" className="hidden" ref={truckFileInputRef} onChange={handleUploadTruckPhoto} />
+
                         <ProfileAvatar
                             userName={name || "Conductor"}
                             photoUrl={photoUrl}
-                            onEditPhoto={() => console.log("Editar foto de perfil")}
+                            onEditPhoto={() => profileFileInputRef.current?.click()}
                         />
 
                         <DriverProfileForm
@@ -197,6 +249,36 @@ export default function Profile() {
                             onSave={handleSave}
                             saving={saving}
                         />
+
+                        {/* Recuadro de Foto del camión */}
+                        <div className="mt-6">
+                            <label className="text-sm text-gray-600 mb-1 block">
+                                Foto del camión
+                            </label>
+                            <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex items-center gap-4">
+                                <div className="w-20 h-20 shrink-0 rounded-lg bg-gray-100 overflow-hidden flex items-center justify-center border border-gray-200">
+                                    {truckPhotoUrl ? (
+                                        <img
+                                            src={truckPhotoUrl}
+                                            alt="Foto del camión"
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        <span className="text-gray-400 text-xs text-center px-2">Sin foto</span>
+                                    )}
+                                </div>
+                                <div className="flex-1 flex flex-col justify-center">
+                                    <p className="text-sm text-gray-500 mb-2">Mantén actualizada la foto de tu vehículo.</p>
+                                    <button
+                                        onClick={() => truckFileInputRef.current?.click()}
+                                        className="text-sm text-[var(--secondary)] font-semibold flex items-center gap-1 active:opacity-70 transition"
+                                    >
+                                        <HiOutlinePencil size={16} />
+                                        Actualizar foto
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </>
                 )}
 
