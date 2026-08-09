@@ -150,7 +150,7 @@ export default function WaitingDriver() {
       regresar directamente al inicio después de cancelar.
       */
 
-      navigate(PATHS.CLIENT.HISTORY);
+      navigate(PATHS.CLIENT.HOME);
 
     } catch (err: any) {
       console.error(

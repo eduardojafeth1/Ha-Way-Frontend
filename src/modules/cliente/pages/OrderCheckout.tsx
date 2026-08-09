@@ -41,7 +41,7 @@ export default function OrderCheckout() {
             setCards(cardsData);
             
             if (cardsData.length > 0) {
-                const defaultCard = cardsData.find((c: any) => c.is_default) || cardsData[0];
+                const defaultCard = cardsData.find((c: any) => c.principal) || cardsData[0];
                 setSelectedCardId(defaultCard.id_tarjeta);
             }
         } catch (err: any) {
@@ -211,7 +211,14 @@ export default function OrderCheckout() {
                                             onChange={() => setSelectedCardId(card.id_tarjeta)}
                                         />
                                         <FaCreditCard className="text-gray-600" />
-                                        <span className="text-gray-700 text-sm flex-1">{card.numero_tarjeta}</span>
+                                        <span className="text-gray-700 text-sm flex-1">
+                                            {card.marca} **** {card.ultimos4}
+                                            {card.principal && (
+                                                <span className="ml-2 text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                                                    Principal
+                                                </span>
+                                            )}
+                                        </span>
                                     </label>
                                 ))}
                                 
