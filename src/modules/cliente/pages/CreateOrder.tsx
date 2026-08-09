@@ -17,6 +17,20 @@ import { getJson, postJson } from "../../../services/api";
 
 type DeliveryOption = "now" | "today" | "tomorrow";
 
+/**
+ * Devuelve la fecha en formato "YYYY-MM-DD" usando la hora LOCAL del
+ * dispositivo (no UTC). `Date.toISOString()` convierte a UTC antes de
+ * extraer la fecha, lo que provoca que el día se adelante en zonas
+ * horarias detrás de UTC (como Honduras, UTC-6) al hacer pedidos
+ * después de las 6:00 PM hora local.
+ */
+function toLocalDateString(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 export default function CreateOrder() {
   const navigate = useNavigate();
 
@@ -152,15 +166,15 @@ export default function CreateOrder() {
 
     const hoy = new Date();
     if (schedule === "now") {
-      fechaProgramada = hoy.toISOString().split("T")[0];
+      fechaProgramada = toLocalDateString(hoy);
       horaProgramada = hoy.toTimeString().split(" ")[0]; // HH:MM:SS
     } else if (schedule === "today") {
-      fechaProgramada = hoy.toISOString().split("T")[0];
+      fechaProgramada = toLocalDateString(hoy);
       horaProgramada = time ? `${time}:00` : "";
     } else if (schedule === "tomorrow") {
       const mañana = new Date();
       mañana.setDate(mañana.getDate() + 1);
-      fechaProgramada = mañana.toISOString().split("T")[0];
+      fechaProgramada = toLocalDateString(mañana);
       horaProgramada = time ? `${time}:00` : "";
     }
 

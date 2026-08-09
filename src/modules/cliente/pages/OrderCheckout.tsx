@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { PATHS } from "../../../routes/path";
 import PageHeader from "../components/PageHeader";
-import { getJson, putJson, postJson } from "../../../services/api";
-import { FaTint, FaMapMarkerAlt, FaClock, FaCreditCard, FaMoneyBillWave, FaChevronDown, FaChevronUp, FaPlus, FaCheckCircle } from "react-icons/fa";
+import { getJson, putJson } from "../../../services/api";
+import { FaTint, FaMapMarkerAlt, FaClock, FaCreditCard, FaMoneyBillWave, FaChevronDown, FaChevronUp, FaPlus } from "react-icons/fa";
+import AddCardForm from "../components/AddCardForm";
 
 export default function OrderCheckout() {
     const { id: offerId } = useParams();
@@ -21,14 +22,6 @@ export default function OrderCheckout() {
     const [cards, setCards] = useState<any[]>([]);
     const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
     const [isAddingCard, setIsAddingCard] = useState(false);
-
-    // New Card Form
-    const [newCard, setNewCard] = useState({
-        numero_tarjeta: "",
-        nombre_titular: "",
-        fecha_vencimiento: "",
-        cvv: ""
-    });
 
     const [isConfirming, setIsConfirming] = useState(false);
 
@@ -79,26 +72,12 @@ export default function OrderCheckout() {
         }
     };
 
-    const handleSaveCard = async () => {
-        if (!newCard.numero_tarjeta || !newCard.nombre_titular || !newCard.fecha_vencimiento || !newCard.cvv) {
-            setError("Completa todos los campos de la tarjeta");
-            return;
-        }
-
-        try {
-            setIsConfirming(true);
-            const saved = await postJson('/cliente/tarjetas', newCard);
-            setCards([...cards, saved]);
-            setSelectedCardId(saved.id_tarjeta);
-            setPaymentMethod("TARJETA");
-            setIsAddingCard(false);
-            setNewCard({ numero_tarjeta: "", nombre_titular: "", fecha_vencimiento: "", cvv: "" });
-            setError(null);
-        } catch (err: any) {
-            setError(err.message || "Error al guardar la tarjeta");
-        } finally {
-            setIsConfirming(false);
-        }
+    const handleCardAdded = (savedCard: any) => {
+        setCards([...cards, savedCard]);
+        setSelectedCardId(savedCard.id_tarjeta);
+        setPaymentMethod("TARJETA");
+        setIsCardExpanded(true);
+        setIsAddingCard(false);
     };
 
     if (loading) {
@@ -126,81 +105,14 @@ export default function OrderCheckout() {
         return (
             <div className="min-h-screen bg-gray-50 flex flex-col pb-24">
                 <PageHeader title="RESUMEN DEL PEDIDO" onBack={() => setIsAddingCard(false)} onClose={() => navigate(PATHS.CLIENT.HOME)} />
-                
+
                 <div className="p-6 max-w-md mx-auto w-full">
                     <h2 className="text-xl font-bold text-gray-800 mb-6">Añadir Nueva Tarjeta</h2>
 
-                    {error && (
-                        <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm">
-                            {error}
-                        </div>
-                    )}
-
-                    <div className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Número de Tarjeta</label>
-                            <div className="relative">
-                                <input
-                                    type="text"
-                                    placeholder="0000 0000 0000 0000"
-                                    className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
-                                    value={newCard.numero_tarjeta}
-                                    onChange={e => setNewCard({...newCard, numero_tarjeta: e.target.value})}
-                                />
-                                <FaCreditCard className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Nombre del Titular</label>
-                            <input
-                                type="text"
-                                placeholder="Juan Pérez"
-                                className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
-                                value={newCard.nombre_titular}
-                                onChange={e => setNewCard({...newCard, nombre_titular: e.target.value})}
-                            />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Vencimiento</label>
-                                <input
-                                    type="text"
-                                    placeholder="MM/YY"
-                                    className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
-                                    value={newCard.fecha_vencimiento}
-                                    onChange={e => setNewCard({...newCard, fecha_vencimiento: e.target.value})}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">CVV</label>
-                                <input
-                                    type="text"
-                                    placeholder="---"
-                                    className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
-                                    value={newCard.cvv}
-                                    onChange={e => setNewCard({...newCard, cvv: e.target.value})}
-                                />
-                            </div>
-                        </div>
-
-                        <button
-                            onClick={handleSaveCard}
-                            disabled={isConfirming}
-                            className="w-full mt-6 bg-[var(--primary)] text-white font-semibold py-3.5 rounded-xl hover:opacity-90 transition disabled:opacity-50 flex items-center justify-center gap-2"
-                        >
-                            <FaCheckCircle size={20} />
-                            Guardar Tarjeta
-                        </button>
-                        
-                        <button
-                            onClick={() => setIsAddingCard(false)}
-                            className="w-full mt-2 bg-transparent text-gray-600 font-medium py-3 rounded-xl hover:bg-gray-100 transition"
-                        >
-                            Cancelar
-                        </button>
-                    </div>
+                    <AddCardForm
+                        onSuccess={handleCardAdded}
+                        onCancel={() => setIsAddingCard(false)}
+                    />
                 </div>
             </div>
         );

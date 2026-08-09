@@ -109,55 +109,13 @@ export default function WaitingDriver() {
   ==========================================================
   */
 
-  const handleConfirmOffer = async (
-    offerId: number
-  ) => {
-    if (isConfirming || isCancelling) return;
-
-    try {
-      setIsConfirming(true);
-      setError("");
-
-      const response = await putJson(
-        `/cliente/ofertas/${offerId}/aceptar`,
-        {}
-      );
-
-      const pedidoId =
-        response?.pedido?.id_pedido;
-
-      if (!pedidoId) {
-        throw new Error(
-          "El servidor no devolvió el identificador del pedido."
-        );
-      }
-
-      /*
-      ========================================================
-      El backend crea el pedido cuando se acepta la oferta.
-      Después se navega al checkout / resumen del pedido.
-      ========================================================
-      */
-
+  const handleConfirmOffer = (
+      offerId: number
+    ) => {
       navigate(
-        PATHS.CLIENT.CHECKOUT(pedidoId)
+        PATHS.CLIENT.CHECKOUT(offerId)
       );
-
-    } catch (err: any) {
-      console.error(
-        "Error al aceptar la oferta:",
-        err
-      );
-
-      setError(
-        err.message ||
-          "No se pudo aceptar la oferta."
-      );
-
-    } finally {
-      setIsConfirming(false);
-    }
-  };
+    };
 
   /*
   ==========================================================
